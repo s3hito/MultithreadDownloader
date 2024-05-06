@@ -14,7 +14,6 @@ namespace MultithreadDownloader
 
         private string Filename;
         private string URL;
-
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
@@ -61,11 +60,13 @@ namespace MultithreadDownloader
         }
         public async Task Start()
         {
+            List<Task> tasks = new List<Task>();
             foreach (DownloadThread thread in ThreadList)
             {
-                StartThreadAsync(thread);
+                tasks.Add(StartThreadAsync(thread));
             }
-
+            await Task.WhenAll(tasks);
+            Console.WriteLine("Continuing");
         }
 
         public async Task StartThreadAsync(DownloadThread thread)

@@ -13,8 +13,7 @@ namespace MultithreadDownloader
     {
         static void Main(string[] args)
         {
-            string gg;
-            string link = "https://file-examples.com/storage/fe4996602366316ffa06467/2017/04/file_example_MP4_1280_10MG.mp4";
+            string link = "https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_10mb.mp4";
             DownloadController dnl = new DownloadController("testfile.mp4", link, 4);
             dnl.PrintData();
             ///dnl.Start();
