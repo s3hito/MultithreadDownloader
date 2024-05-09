@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using System.Net;
 using System.IO;
 using System.Globalization;
+using System.Threading;
 
 namespace MultithreadDownloader
 {
+
     internal class DownloadController
     {
-
+        
         private string Filename;
         private string URL;
         HttpWebRequest request;
@@ -35,7 +37,6 @@ namespace MultithreadDownloader
 
         public void PrintData()
         {
-
             SplitIntoSections();
             Console.WriteLine(URL);
             Console.WriteLine($"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb");
@@ -43,7 +44,6 @@ namespace MultithreadDownloader
             Console.WriteLine("Downloading");
 
             Start();
-            Console.WriteLine("Downloaded");
 
 
         }
@@ -60,21 +60,45 @@ namespace MultithreadDownloader
         }
         public async Task Start()
         {
+            
             List<Task> tasks = new List<Task>();
+            
             foreach (DownloadThread thread in ThreadList)
             {
                 tasks.Add(StartThreadAsync(thread));
             }
+           
+            
+            /*
+            for (int i=0; i < 10; i++)
+            {
+                tasks.Add(TestMethod());
+            }
+            */
             await Task.WhenAll(tasks);
-            Console.WriteLine("Continuing");
+            Console.WriteLine("All tasks complete");
+            CombineTempFiles();
+            DeleteTempFiles();
         }
+
+        public async Task TestMethod(DownloadThread thread)
+        {
+            
+            HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
+            ThreadRequest.AddRange(thread.Start, thread.End);
+            WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
+            Console.WriteLine("Thread completed");
+        }
+
 
         public async Task StartThreadAsync(DownloadThread thread)
         {
             HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             ThreadRequest.AddRange(thread.Start, thread.End);
-            WebResponse ThreadResponce = (WebResponse)ThreadRequest.GetResponse();
-
+            WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
+            Console.WriteLine("Thread started");
+            thread.Status = "Downloading";
+            thread.ProgressAbsolute = thread.Start;
             using (Stream ThreadRespStream = ThreadResponce.GetResponseStream())
             {
                 using (FileStream fs = new FileStream(thread.ThreadName, FileMode.Create))
@@ -86,6 +110,9 @@ namespace MultithreadDownloader
                         bytesRead = ThreadRespStream.Read(buffer, 0, buffer.Length);
                         fs.Write(buffer, 0, bytesRead);
                         fs.Flush();
+                        thread.ProgressAbsolute += bytesRead;
+                        thread.ProgressRelative = Convert.ToInt32(100*(thread.ProgressAbsolute/ (thread.End - thread.Start)));
+                        UpdateDownloadDetails();
                     }
                     while (bytesRead > 0);
                     fs.Close();
@@ -124,6 +151,14 @@ namespace MultithreadDownloader
             {
                 File.Delete(TempFile);
             }
+        }
+        public void UpdateDownloadDetails()
+        {
+            foreach(DownloadThread download in ThreadList)
+            {
+                Console.WriteLine($"{download.ThreadName}: {download.Status} {download.ProgressRelative}");
+            }
+            
         }
 
     }

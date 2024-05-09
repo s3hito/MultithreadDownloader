@@ -11,11 +11,15 @@ namespace MultithreadDownloader
         public long Start;
         public long End;
         public string ThreadName;
+        public string Status;
+        public long ProgressAbsolute;
+        public int ProgressRelative;
         public DownloadThread(long start, long end, string threadname)
         {
             Start = start;
             End = end;
             ThreadName = threadname;
+            Status = "Idle";
         }
     }
 }
