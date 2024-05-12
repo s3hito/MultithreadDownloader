@@ -22,6 +22,8 @@ namespace MultithreadDownloader
         private long BytesLength;
         private long SectionLength;
         private long LastPiece;
+        private bool CanLaunchConsoleUpdate=true;
+        private string DownloadBaseInfo;
         private List<DownloadThread> ThreadList = new List<DownloadThread>();
         public DownloadController(string _filename, string _url, int _tnum, string path = "")
         {
@@ -32,15 +34,15 @@ namespace MultithreadDownloader
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             BytesLength = responce.ContentLength;
-
+            DownloadBaseInfo = $"{URL} \n" + $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb \n" +
+                $"Number of threads: {TNumber}";
         }
 
         public void PrintData()
         {
             SplitIntoSections();
-            Console.WriteLine(URL);
-            Console.WriteLine($"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb");
-            Console.WriteLine($"Number of threads: {TNumber}");
+            
+
             Console.WriteLine("Downloading");
 
             Start();
@@ -111,14 +113,28 @@ namespace MultithreadDownloader
                         fs.Write(buffer, 0, bytesRead);
                         fs.Flush();
                         thread.ProgressAbsolute += bytesRead;
-                        thread.ProgressRelative = Convert.ToInt32(100*(thread.ProgressAbsolute/ (thread.End - thread.Start)));
+                       
+                        thread.ProgressRelative = CalcProgress(thread);
                         UpdateDownloadDetails();
                     }
                     while (bytesRead > 0);
                     fs.Close();
                 }
             }
+            thread.Status = "Done";
+            Console.Clear();
+            UpdateDownloadDetails();
             Console.WriteLine("Thread completed");
+        }
+
+        private float CalcProgress(DownloadThread thread)
+        {
+            long normprog = thread.ProgressAbsolute - thread.Start;
+            long normgoal = thread.End - thread.Start;
+            double relprog = (double)normprog / (double)normgoal;
+            float res = (float)(Math.Round(relprog*100,2));
+            
+            return res;
         }
 
         public void CombineTempFiles()
@@ -154,10 +170,19 @@ namespace MultithreadDownloader
         }
         public void UpdateDownloadDetails()
         {
-            foreach(DownloadThread download in ThreadList)
+            if (CanLaunchConsoleUpdate)
             {
-                Console.WriteLine($"{download.ThreadName}: {download.Status} {download.ProgressRelative}");
+                CanLaunchConsoleUpdate = false;
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine(DownloadBaseInfo);
+                foreach (DownloadThread download in ThreadList)
+                {
+                    Console.WriteLine($"{download.ThreadName}: {download.Status} {download.ProgressRelative.ToString("N2")}");
+                }
+                Thread.Sleep(10);
+                CanLaunchConsoleUpdate = true;
             }
+            
             
         }
 

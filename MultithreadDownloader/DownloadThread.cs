@@ -13,7 +13,7 @@ namespace MultithreadDownloader
         public string ThreadName;
         public string Status;
         public long ProgressAbsolute;
-        public int ProgressRelative;
+        public float ProgressRelative;
         public DownloadThread(long start, long end, string threadname)
         {
             Start = start;
