@@ -25,6 +25,7 @@ namespace MultithreadDownloader
         private bool CanLaunchConsoleUpdate=true;
         private string DownloadBaseInfo;
         private List<DownloadThread> ThreadList = new List<DownloadThread>();
+        private bool DownloadFinished=false;
         public DownloadController(string _filename, string _url, int _tnum, string path = "")
         {
             Filename = _filename;
@@ -42,9 +43,6 @@ namespace MultithreadDownloader
         {
             SplitIntoSections();
             
-
-            Console.WriteLine("Downloading");
-
             Start();
 
 
@@ -69,28 +67,14 @@ namespace MultithreadDownloader
             {
                 tasks.Add(StartThreadAsync(thread));
             }
-           
-            
-            /*
-            for (int i=0; i < 10; i++)
-            {
-                tasks.Add(TestMethod());
-            }
-            */
+            Task.Run(ConsoleUpdater);
             await Task.WhenAll(tasks);
-            Console.WriteLine("All tasks complete");
+            DownloadFinished=true;
             CombineTempFiles();
             DeleteTempFiles();
+            Console.WriteLine("Done");
         }
 
-        public async Task TestMethod(DownloadThread thread)
-        {
-            
-            HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
-            ThreadRequest.AddRange(thread.Start, thread.End);
-            WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
-            Console.WriteLine("Thread completed");
-        }
 
 
         public async Task StartThreadAsync(DownloadThread thread)
@@ -98,7 +82,6 @@ namespace MultithreadDownloader
             HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             ThreadRequest.AddRange(thread.Start, thread.End);
             WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
-            Console.WriteLine("Thread started");
             thread.Status = "Downloading";
             thread.ProgressAbsolute = thread.Start;
             using (Stream ThreadRespStream = ThreadResponce.GetResponseStream())
@@ -115,16 +98,15 @@ namespace MultithreadDownloader
                         thread.ProgressAbsolute += bytesRead;
                        
                         thread.ProgressRelative = CalcProgress(thread);
-                        UpdateDownloadDetails();
+                        
                     }
                     while (bytesRead > 0);
                     fs.Close();
                 }
             }
             thread.Status = "Done";
-            Console.Clear();
-            UpdateDownloadDetails();
-            Console.WriteLine("Thread completed");
+            
+            
         }
 
         private float CalcProgress(DownloadThread thread)
@@ -168,8 +150,17 @@ namespace MultithreadDownloader
                 File.Delete(TempFile);
             }
         }
+        public async Task ConsoleUpdater()
+        {
+            while (!DownloadFinished) 
+            {
+                UpdateDownloadDetails();
+                Thread.Sleep(1);
+            }
+        }
         public void UpdateDownloadDetails()
         {
+           
             if (CanLaunchConsoleUpdate)
             {
                 CanLaunchConsoleUpdate = false;
@@ -177,9 +168,17 @@ namespace MultithreadDownloader
                 Console.WriteLine(DownloadBaseInfo);
                 foreach (DownloadThread download in ThreadList)
                 {
-                    Console.WriteLine($"{download.ThreadName}: {download.Status} {download.ProgressRelative.ToString("N2")}");
+                    
+                    if (download.Status == "Done" && download.ConsoleFlag)//If finished downloading clear the entire line
+                    {
+                        int CurrentLineCursor = Console.CursorTop;
+                        Console.Write(new string(' ', Console.WindowWidth));
+                        Console.SetCursorPosition(0, CurrentLineCursor);
+                    }
+                    
+                    Console.WriteLine($"{download.ThreadName}: {download.ProgressRelative.ToString("N2")} {download.Status}");
                 }
-                Thread.Sleep(10);
+
                 CanLaunchConsoleUpdate = true;
             }
             

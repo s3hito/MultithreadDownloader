@@ -14,12 +14,14 @@ namespace MultithreadDownloader
         public string Status;
         public long ProgressAbsolute;
         public float ProgressRelative;
+        public bool ConsoleFlag;
         public DownloadThread(long start, long end, string threadname)
         {
             Start = start;
             End = end;
             ThreadName = threadname;
             Status = "Idle";
+            ConsoleFlag = true;
         }
     }
 }
