@@ -13,8 +13,12 @@ namespace MultithreadDownloader
     {
         static void Main(string[] args)
         {
-            string link = "https://sample.mp4-download.com/DUBAI,%20United%20Arab%20Emirates%20In%208K%20ULTRA%20HD%20HDR%2060%20FPS..mp4";
-            DownloadController dnl = new DownloadController("testfile.mp4", link, 8);
+            string link = "https://files.testfile.org/Video%20MP4%2FRoad%20-%20testfile.org.mp4";
+
+            //string link = "https://sample.mp4-download.com/DUBAI,%20United%20Arab%20Emirates%20In%208K%20ULTRA%20HD%20HDR%2060%20FPS..mp4";
+            //string link = "https://ash-speed.hetzner.com/100MB.bin";
+            //DownloadController dnl = new DownloadController("testfile.mp4", link, 4, _useproxy: true, _proxyaddress: "117.250.3.58:8080");// with proxy
+            DownloadController dnl = new DownloadController("testfile.mp4", link, 4);// without proxy
             dnl.PrintData();
 
 

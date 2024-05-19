@@ -26,11 +26,22 @@ namespace MultithreadDownloader
         private string DownloadBaseInfo;
         private List<DownloadThread> ThreadList = new List<DownloadThread>();
         private bool DownloadFinished=false;
-        public DownloadController(string _filename, string _url, int _tnum, string path = "")
+        private bool UseProxy;
+        private string ProxyAddress;
+        private int ProxyPort;
+        public DownloadController(string _filename, string _url, int _tnum, string path = "",bool _useproxy=false, string _proxyaddress=null)
         {
             Filename = _filename;
             URL = _url;
             TNumber = _tnum;
+            UseProxy=_useproxy;
+            if (_proxyaddress!=null)
+            {
+                ProxyAddress = _proxyaddress.Split(":")[0];
+                ProxyPort = int.Parse(_proxyaddress.Split(":")[1]);
+            }
+            
+            
 
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
@@ -53,7 +64,8 @@ namespace MultithreadDownloader
             LastPiece = BytesLength % TNumber;
             for (int i = 0; i < TNumber; i++)
             {
-                ThreadList.Add(new DownloadThread(i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}_temp_{i}"));
+                ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}_temp_{i}"));
+                ThreadList[i].Size = ThreadList[i].End-ThreadList[i].Start;
             }
             ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece + 1;
 
@@ -65,7 +77,7 @@ namespace MultithreadDownloader
             
             foreach (DownloadThread thread in ThreadList)
             {
-                tasks.Add(StartThreadAsync(thread));
+                tasks.Add(thread.StartThreadAsync());
             }
             Task.Run(ConsoleUpdater);
             await Task.WhenAll(tasks);
@@ -76,49 +88,7 @@ namespace MultithreadDownloader
         }
 
 
-
-        public async Task StartThreadAsync(DownloadThread thread)
-        {
-            HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
-            ThreadRequest.AddRange(thread.Start, thread.End);
-            WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
-            thread.Status = "Downloading";
-            thread.ProgressAbsolute = thread.Start;
-            using (Stream ThreadRespStream = ThreadResponce.GetResponseStream())
-            {
-                using (FileStream fs = new FileStream(thread.ThreadName, FileMode.Create))
-                {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = 0;
-                    do
-                    {
-                        bytesRead = ThreadRespStream.Read(buffer, 0, buffer.Length);
-                        fs.Write(buffer, 0, bytesRead);
-                        fs.Flush();
-                        thread.ProgressAbsolute += bytesRead;
-                       
-                        thread.ProgressRelative = CalcProgress(thread);
-                        
-                    }
-                    while (bytesRead > 0);
-                    fs.Close();
-                }
-            }
-            thread.Status = "Done";
-            
-            
-        }
-
-        private float CalcProgress(DownloadThread thread)
-        {
-            long normprog = thread.ProgressAbsolute - thread.Start;
-            long normgoal = thread.End - thread.Start;
-            double relprog = (double)normprog / (double)normgoal;
-            float res = (float)(Math.Round(relprog*100,2));
-            
-            return res;
-        }
-
+        
         public void CombineTempFiles()
         {
 
@@ -155,7 +125,7 @@ namespace MultithreadDownloader
             while (!DownloadFinished) 
             {
                 UpdateDownloadDetails();
-                Thread.Sleep(1);
+                Thread.Sleep(10);
             }
         }
         public void UpdateDownloadDetails()
@@ -174,6 +144,7 @@ namespace MultithreadDownloader
                         int CurrentLineCursor = Console.CursorTop;
                         Console.Write(new string(' ', Console.WindowWidth));
                         Console.SetCursorPosition(0, CurrentLineCursor);
+                        download.ConsoleFlag=false;
                     }
                     
                     Console.WriteLine($"{download.ThreadName}: {download.ProgressRelative.ToString("N2")} {download.Status}");
