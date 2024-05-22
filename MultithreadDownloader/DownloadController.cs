@@ -19,16 +19,21 @@ namespace MultithreadDownloader
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
+        public int TimeOutMs;
         private long BytesLength;
         private long SectionLength;
         private long LastPiece;
         private bool CanLaunchConsoleUpdate=true;
         private string DownloadBaseInfo;
+        private bool DownloadFinished = false;
+
         private List<DownloadThread> ThreadList = new List<DownloadThread>();
-        private bool DownloadFinished=false;
+        private List<DownloadThread> OldThreadList = new List<DownloadThread>();
+
         private bool UseProxy;
         private string ProxyAddress;
         private int ProxyPort;
+
         public DownloadController(string _filename, string _url, int _tnum, string path = "",bool _useproxy=false, string _proxyaddress=null)
         {
             Filename = _filename;
@@ -156,5 +161,22 @@ namespace MultithreadDownloader
             
         }
 
+        public async Task ThreadWatcher()
+        {
+            ThreadList.AddRange(OldThreadList);
+            Thread.Sleep(TimeOutMs);
+            while (!DownloadFinished)
+            {
+                for (int i=0;i<TNumber;i++)
+                {
+                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute)
+                    {
+                        ThreadList[i].InitiateReconnectSequence();
+                    }
+                }
+
+                Thread.Sleep(TimeOutMs);
+            }
+        }
     }
 }

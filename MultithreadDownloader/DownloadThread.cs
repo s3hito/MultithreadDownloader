@@ -23,6 +23,7 @@ namespace MultithreadDownloader
         public int ProxyPort;
         public bool UseProxy;
         public string URL;
+
         public DownloadThread(string url, long start, long end, string threadname,bool useproxy=false, string proxyAdress=null, int proxyPort=0)
         {
             URL = url;
@@ -34,7 +35,10 @@ namespace MultithreadDownloader
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
+
             
+            
+
         }
 
         public async Task StartThreadAsync()
@@ -46,25 +50,27 @@ namespace MultithreadDownloader
             {
                 ThreadRequest.Proxy = new WebProxy(ProxyAddress, ProxyPort);
             }
+
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
-
             WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
             Status = "Downloading";
             ProgressAbsolute = Start;
             using (Stream ThreadRespStream = ThreadResponce.GetResponseStream())
             {
-                using (FileStream fs = new FileStream(ThreadName, FileMode.Create))
+                using (FileStream fs = new FileStream(ThreadName, FileMode.OpenOrCreate))
                 {
+                   
                     byte[] buffer = new byte[1024];
                     int bytesRead = 0;
                     do
                     {
-                        bytesRead = ThreadRespStream.Read(buffer, 0, buffer.Length);
+                   
+                        bytesRead =await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length,cts.Token);
                         fs.Write(buffer, 0, bytesRead);
                         fs.Flush();
                         ProgressAbsolute += bytesRead;
-
+                        
                         ProgressRelative = CalcProgress();
 
                     }
@@ -82,6 +88,12 @@ namespace MultithreadDownloader
             float res = (float)(Math.Round(relprog * 100, 2));
 
             return res;
+        }
+
+        public void InitiateReconnectSequence()
+        {
+            Thread.Sleep(100000);
+
         }
     }
 }
