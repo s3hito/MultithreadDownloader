@@ -19,7 +19,7 @@ namespace MultithreadDownloader
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
-        public int TimeOutMs;
+        public int TimeOutMs=3000;
         private long BytesLength;
         private long SectionLength;
         private long LastPiece;
@@ -29,6 +29,8 @@ namespace MultithreadDownloader
 
         private List<DownloadThread> ThreadList = new List<DownloadThread>();
         private List<DownloadThread> OldThreadList = new List<DownloadThread>();
+        List<Task> tasks = new List<Task>();
+
 
         private bool UseProxy;
         private string ProxyAddress;
@@ -77,18 +79,12 @@ namespace MultithreadDownloader
         }
         public async Task Start()
         {
-            
-            List<Task> tasks = new List<Task>();
-            
             foreach (DownloadThread thread in ThreadList)
             {
                 tasks.Add(thread.StartThreadAsync());
             }
-            Task.Run(ConsoleUpdater);
-            await Task.WhenAll(tasks);
-            DownloadFinished=true;
-            CombineTempFiles();
-            DeleteTempFiles();
+
+            await ServicesLauncher();
             Console.WriteLine("Done");
         }
 
@@ -152,7 +148,7 @@ namespace MultithreadDownloader
                         download.ConsoleFlag=false;
                     }
                     
-                    Console.WriteLine($"{download.ThreadName}: {download.ProgressRelative.ToString("N2")} {download.Status}");
+                    Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status}");
                 }
 
                 CanLaunchConsoleUpdate = true;
@@ -161,9 +157,20 @@ namespace MultithreadDownloader
             
         }
 
+        public async Task ServicesLauncher()
+        {
+            Task.Run(ConsoleUpdater);
+            Task.Run(ThreadWatcher);
+
+            await Task.WhenAll(tasks);
+            DownloadFinished = true;
+            CombineTempFiles();
+            DeleteTempFiles();
+        }
+
         public async Task ThreadWatcher()
         {
-            ThreadList.AddRange(OldThreadList);
+            OldThreadList = ThreadList.Select(x=>x.Copy()).ToList();
             Thread.Sleep(TimeOutMs);
             while (!DownloadFinished)
             {
@@ -172,9 +179,11 @@ namespace MultithreadDownloader
                     if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute)
                     {
                         ThreadList[i].InitiateReconnectSequence();
+                        
+                        tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }
-
+                OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
                 Thread.Sleep(TimeOutMs);
             }
         }

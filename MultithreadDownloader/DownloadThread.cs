@@ -23,6 +23,8 @@ namespace MultithreadDownloader
         public int ProxyPort;
         public bool UseProxy;
         public string URL;
+        FileStream fs;
+        Stream ThreadRespStream;
 
         public DownloadThread(string url, long start, long end, string threadname,bool useproxy=false, string proxyAdress=null, int proxyPort=0)
         {
@@ -35,10 +37,11 @@ namespace MultithreadDownloader
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
+        }
 
-            
-            
-
+        public DownloadThread Copy() 
+        {
+            return (DownloadThread)this.MemberwiseClone();
         }
 
         public async Task StartThreadAsync()
@@ -56,29 +59,31 @@ namespace MultithreadDownloader
             WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
             Status = "Downloading";
             ProgressAbsolute = Start;
-            using (Stream ThreadRespStream = ThreadResponce.GetResponseStream())
-            {
-                using (FileStream fs = new FileStream(ThreadName, FileMode.OpenOrCreate))
-                {
-                   
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = 0;
-                    do
-                    {
-                   
-                        bytesRead =await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length,cts.Token);
-                        fs.Write(buffer, 0, bytesRead);
-                        fs.Flush();
-                        ProgressAbsolute += bytesRead;
-                        
-                        ProgressRelative = CalcProgress();
 
-                    }
-                    while (bytesRead > 0);
-                    fs.Close();
-                }
+            ThreadRespStream = ThreadResponce.GetResponseStream();
+            fs = new FileStream(ThreadName, FileMode.OpenOrCreate);
+
+            byte[] buffer = new byte[1024];
+            int bytesRead = 0;
+            do
+            {
+                   
+                bytesRead =await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
+                fs.Write(buffer, 0, bytesRead);
+                fs.Flush();
+                ProgressAbsolute += bytesRead;
+                        
+                ProgressRelative = CalcProgress();
+                    
+
             }
+            while (bytesRead > 0);
+            fs.Close();
+                
             Status = "Done";
+            
+            
+           
         }
         private float CalcProgress()
         {
@@ -92,7 +97,12 @@ namespace MultithreadDownloader
 
         public void InitiateReconnectSequence()
         {
-            Thread.Sleep(100000);
+            Status = "Reconnecting...";
+            fs.Flush();
+            fs.Close();
+            Start = ProgressAbsolute;
+            ThreadRespStream.Close();
+            Status = "Reconnecting...132";
 
         }
     }
