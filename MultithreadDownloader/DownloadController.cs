@@ -140,12 +140,10 @@ namespace MultithreadDownloader
                 foreach (DownloadThread download in ThreadList)
                 {
                     
-                    if (download.Status == "Done" && download.ConsoleFlag)//If finished downloading clear the entire line
+                    if (download.CanClearLine)//If finished downloading clear the entire line
                     {
-                        int CurrentLineCursor = Console.CursorTop;
-                        Console.Write(new string(' ', Console.WindowWidth));
-                        Console.SetCursorPosition(0, CurrentLineCursor);
-                        download.ConsoleFlag=false;
+                        ClearLine();
+                        download.CanClearLine = false;
                     }
                     
                     Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status}");
@@ -155,6 +153,13 @@ namespace MultithreadDownloader
             }
             
             
+        }
+
+        public void ClearLine()
+        {
+            int CurrentLineCursor = Console.CursorTop;
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, CurrentLineCursor);
         }
 
         public async Task ServicesLauncher()
@@ -176,10 +181,10 @@ namespace MultithreadDownloader
             {
                 for (int i=0;i<TNumber;i++)
                 {
-                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute)
+                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status=="Downloading")
                     {
                         ThreadList[i].InitiateReconnectSequence();
-                        
+                       
                         tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }

@@ -17,7 +17,7 @@ namespace MultithreadDownloader
         public string Status;
         public long ProgressAbsolute;
         public float ProgressRelative;
-        public bool ConsoleFlag;
+        public bool CanClearLine;
         public long Size;
         public string ProxyAddress;
         public int ProxyPort;
@@ -33,7 +33,7 @@ namespace MultithreadDownloader
             End = end;
             ThreadName = threadname;
             Status = "Idle";
-            ConsoleFlag = true;
+            CanClearLine = false;
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
@@ -43,6 +43,8 @@ namespace MultithreadDownloader
         {
             return (DownloadThread)this.MemberwiseClone();
         }
+
+
 
         public async Task StartThreadAsync()
         {
@@ -56,11 +58,24 @@ namespace MultithreadDownloader
 
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
-            WebResponse ThreadResponce = await ThreadRequest.GetResponseAsync();
-            Status = "Downloading";
-            ProgressAbsolute = Start;
+            Thread.Sleep(3000);
+            WebResponse ThreadResponse = null;
+            Task<WebResponse> getResponceTask = ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
+            if (getResponceTask == await Task.WhenAny(getResponceTask, Task.Delay(3000)))//Хуита не робит
+            {
+                ThreadResponse = await getResponceTask;
+                Status = "Downloading";
+                ProgressAbsolute = Start;
+            }
+            else
+            {
+                Status = "Timed out. Reconnecting...";
+                
+            }
 
-            ThreadRespStream = ThreadResponce.GetResponseStream();
+           
+
+            ThreadRespStream = ThreadResponse.GetResponseStream();
             fs = new FileStream(ThreadName, FileMode.OpenOrCreate);
 
             byte[] buffer = new byte[1024];
@@ -81,7 +96,7 @@ namespace MultithreadDownloader
             fs.Close();
                 
             Status = "Done";
-            
+            CanClearLine = true;
             
            
         }
@@ -98,11 +113,12 @@ namespace MultithreadDownloader
         public void InitiateReconnectSequence()
         {
             Status = "Reconnecting...";
+            ThreadRespStream.Close();
+
+            CanClearLine = true;
             fs.Flush();
             fs.Close();
             Start = ProgressAbsolute;
-            ThreadRespStream.Close();
-            Status = "Reconnecting...132";
 
         }
     }
