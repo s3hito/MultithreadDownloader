@@ -49,8 +49,9 @@ namespace MultithreadDownloader
         public async Task StartThreadAsync()
         {
             HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
+            fs = null;
 
-            
+
             if (UseProxy)
             {
                 ThreadRequest.Proxy = new WebProxy(ProxyAddress, ProxyPort);
@@ -58,22 +59,11 @@ namespace MultithreadDownloader
 
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
-            Thread.Sleep(3000);
-            WebResponse ThreadResponse = null;
-            Task<WebResponse> getResponceTask = ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
-            if (getResponceTask == await Task.WhenAny(getResponceTask, Task.Delay(3000)))//Хуита не робит
-            {
-                ThreadResponse = await getResponceTask;
-                Status = "Downloading";
-                ProgressAbsolute = Start;
-            }
-            else
-            {
-                Status = "Timed out. Reconnecting...";
-                
-            }
-
-           
+            WebResponse ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
+            
+            Status = "Downloading";
+            ProgressAbsolute = Start;
+          
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
             fs = new FileStream(ThreadName, FileMode.OpenOrCreate);
@@ -112,13 +102,20 @@ namespace MultithreadDownloader
 
         public void InitiateReconnectSequence()
         {
-            Status = "Reconnecting...";
+            Status = "Disconnected";
             ThreadRespStream.Close();
 
             CanClearLine = true;
-            fs.Flush();
-            fs.Close();
+            if (fs!=null)
+            {
+                fs.Flush();
+                fs.Close();
+            }
+            
             Start = ProgressAbsolute;
+
+            Status = "Disconnected123";
+
 
         }
     }

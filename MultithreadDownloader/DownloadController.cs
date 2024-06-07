@@ -165,15 +165,43 @@ namespace MultithreadDownloader
         public async Task ServicesLauncher()
         {
             Task.Run(ConsoleUpdater);
-            Task.Run(ThreadWatcher);
+            Task.Run(DownloadWatcher);
+            await Task.Run(TaskWatcher);
 
-            await Task.WhenAll(tasks);
             DownloadFinished = true;
             CombineTempFiles();
             DeleteTempFiles();
         }
 
-        public async Task ThreadWatcher()
+        public async Task TaskWatcher()
+        {
+            bool flag=false;
+            while (!DownloadFinished)
+            {
+
+                foreach (DownloadThread download in ThreadList)
+                {
+                    if (download.Status=="Done") 
+                    {
+                        flag = true;
+                    }
+                    else
+                    {
+                        flag=false;
+                        break;
+                    }
+                }
+                if (flag)
+                {
+                    break;
+                }
+                Thread.Sleep(100);
+            }
+
+
+        }
+
+        public async Task DownloadWatcher()
         {
             OldThreadList = ThreadList.Select(x=>x.Copy()).ToList();
             Thread.Sleep(TimeOutMs);
@@ -181,11 +209,12 @@ namespace MultithreadDownloader
             {
                 for (int i=0;i<TNumber;i++)
                 {
-                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status=="Downloading")
+                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!="Done")
                     {
                         ThreadList[i].InitiateReconnectSequence();
                        
-                        tasks[i] = ThreadList[i].StartThreadAsync();
+                        var newtask = ThreadList[i].StartThreadAsync();
+                        tasks[i]= newtask;
                     }
                 }
                 OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
