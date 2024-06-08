@@ -37,6 +37,8 @@ namespace MultithreadDownloader
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
+
+            using (FileStream fs = new FileStream(ThreadName, FileMode.Create)) { }
         }
 
         public DownloadThread Copy() 
@@ -66,23 +68,24 @@ namespace MultithreadDownloader
           
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
-            fs = new FileStream(ThreadName, FileMode.OpenOrCreate);
+            fs = new FileStream(ThreadName, FileMode.Append);
 
             byte[] buffer = new byte[1024];
             int bytesRead = 0;
             do
             {
-                   
-                bytesRead =await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
+
+                bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
+                if (fs == null) return;
                 fs.Write(buffer, 0, bytesRead);
                 fs.Flush();
                 ProgressAbsolute += bytesRead;
-                        
+
                 ProgressRelative = CalcProgress();
-                    
+
 
             }
-            while (bytesRead > 0);
+            while (bytesRead > 0 );
             fs.Close();
                 
             Status = "Done";
@@ -103,7 +106,9 @@ namespace MultithreadDownloader
         public void InitiateReconnectSequence()
         {
             Status = "Disconnected";
+
             ThreadRespStream.Close();
+
 
             CanClearLine = true;
             if (fs!=null)
@@ -113,7 +118,7 @@ namespace MultithreadDownloader
             }
             
             Start = ProgressAbsolute;
-
+             
             Status = "Disconnected123";
 
 

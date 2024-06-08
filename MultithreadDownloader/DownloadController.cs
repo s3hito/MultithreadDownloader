@@ -93,7 +93,7 @@ namespace MultithreadDownloader
         public void CombineTempFiles()
         {
 
-            using (FileStream OutFile = new FileStream($"{Filename}", FileMode.Append, FileAccess.Write))
+            using (FileStream OutFile = new FileStream($"{Filename}", FileMode.Create, FileAccess.Write))
             {
                 for (int i = 0; i < TNumber; i++)
                 {
@@ -146,7 +146,7 @@ namespace MultithreadDownloader
                         download.CanClearLine = false;
                     }
                     
-                    Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status}");
+                    Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End} Size: {download.End-download.Start}");
                 }
 
                 CanLaunchConsoleUpdate = true;
@@ -213,8 +213,7 @@ namespace MultithreadDownloader
                     {
                         ThreadList[i].InitiateReconnectSequence();
                        
-                        var newtask = ThreadList[i].StartThreadAsync();
-                        tasks[i]= newtask;
+                        tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }
                 OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
