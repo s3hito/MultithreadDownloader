@@ -53,7 +53,7 @@ namespace MultithreadDownloader
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             BytesLength = responce.ContentLength;
-            DownloadBaseInfo = $"{URL} \n" + $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb \n" +
+            DownloadBaseInfo = $"{URL} \n" + $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb Chunk size: {SectionLength} \n" +
                 $"Number of threads: {TNumber}";
         }
 
@@ -146,7 +146,7 @@ namespace MultithreadDownloader
                         download.CanClearLine = false;
                     }
                     
-                    Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End} Size: {download.End-download.Start}");
+                    Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End}");
                 }
 
                 CanLaunchConsoleUpdate = true;
@@ -170,7 +170,7 @@ namespace MultithreadDownloader
 
             DownloadFinished = true;
             CombineTempFiles();
-            DeleteTempFiles();
+            //DeleteTempFiles();
         }
 
         public async Task TaskWatcher()

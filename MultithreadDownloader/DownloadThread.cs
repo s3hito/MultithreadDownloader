@@ -24,6 +24,7 @@ namespace MultithreadDownloader
         public bool UseProxy;
         public string URL;
         FileStream fs;
+        WebResponse ThreadResponse;
         Stream ThreadRespStream;
 
         public DownloadThread(string url, long start, long end, string threadname,bool useproxy=false, string proxyAdress=null, int proxyPort=0)
@@ -52,6 +53,7 @@ namespace MultithreadDownloader
         {
             HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             fs = null;
+            fs = new FileStream(ThreadName, FileMode.Append);
 
 
             if (UseProxy)
@@ -61,22 +63,33 @@ namespace MultithreadDownloader
 
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
-            WebResponse ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
-            
+            ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
+            if (fs == null)
+            {
+                CloseAllStreams();
+                return;
+            } 
             Status = "Downloading";
             ProgressAbsolute = Start;
           
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
-            fs = new FileStream(ThreadName, FileMode.Append);
-
+            if (fs == null)
+            {
+                CloseAllStreams();
+                return;
+            }
             byte[] buffer = new byte[1024];
             int bytesRead = 0;
             do
             {
 
                 bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
-                if (fs == null) return;
+                if (fs == null)
+                {
+                    CloseAllStreams();
+                    return;
+                }
                 fs.Write(buffer, 0, bytesRead);
                 fs.Flush();
                 ProgressAbsolute += bytesRead;
@@ -85,7 +98,7 @@ namespace MultithreadDownloader
 
 
             }
-            while (bytesRead > 0 );
+            while (bytesRead > 0 && ProgressAbsolute < End); //Sometimes for large files it'll keep sending data over the end 
             fs.Close();
                 
             Status = "Done";
@@ -103,19 +116,29 @@ namespace MultithreadDownloader
             return res;
         }
 
-        public void InitiateReconnectSequence()
+        public void CloseAllStreams()
         {
-            Status = "Disconnected";
+            if (ThreadRespStream != null) ThreadRespStream.Close();
 
-            ThreadRespStream.Close();
+            if (ThreadResponse != null) ThreadResponse.Close();
 
-
-            CanClearLine = true;
-            if (fs!=null)
+            if (fs != null)
             {
                 fs.Flush();
                 fs.Close();
             }
+        }
+
+        public void InitiateReconnectSequence()
+        {
+
+            Status = "Disconnected";
+           
+            CloseAllStreams();
+
+
+            CanClearLine = true;
+            
             
             Start = ProgressAbsolute;
              
