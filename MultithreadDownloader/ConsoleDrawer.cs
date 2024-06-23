@@ -13,10 +13,10 @@ namespace MultithreadDownloader
         private string PrefixString;
         private DownloadController ControllerRef;
         private List<DownloadThread> DownloadList;  
-        public ConsoleDrawer(string prefixstring, DownloadController contref, int delayms=10) 
+        public ConsoleDrawer(string prefixstring, List<DownloadThread> downlist, int delayms=10) 
         {
             PrefixString = prefixstring;
-            ControllerRef = contref;
+            DownloadList = downlist;
             DelayMs = delayms;
 
         }
@@ -43,7 +43,12 @@ namespace MultithreadDownloader
         {
             Console.SetCursorPosition(0,0);
             Console.WriteLine(PrefixString);
-            DownloadList = ControllerRef.ThreadList.Select(x => x.Copy()).ToList();
+            bool ackquireqlock=false;
+            Monitor.TryEnter(DownloadList,ref ackquireqlock);
+            if (ackquireqlock)
+            {
+
+            
             foreach (DownloadThread download in DownloadList)//Holy crap it freezes right here I saw it in a debugger.
                                                                          //Why tf it does that????? I got no clue for some reason it
                                                                          //doesn't go through the list it just stays here forever.
@@ -57,7 +62,8 @@ namespace MultithreadDownloader
                 Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute - download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End}");
 
             }
-       }
+            }
+        }
         private void ClearLine()
         {
             int CurrentLineCursor = Console.CursorTop;

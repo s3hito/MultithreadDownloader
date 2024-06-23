@@ -59,7 +59,7 @@ namespace MultithreadDownloader
                 $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb " +
                 $"Chunk size: {SectionLength} \n" +
                 $"Number of threads: {TNumber}";
-            Drawer = new ConsoleDrawer(DownloadBaseInfo, this);
+            Drawer = new ConsoleDrawer(DownloadBaseInfo, ThreadList);
 
         }
 
