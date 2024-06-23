@@ -22,7 +22,9 @@ namespace MultithreadDownloader
             await dnl.PrintData();
 
 
-            //Console.ReadLine();
+            Console.ReadLine();
+            Console.ReadLine();
+
         }
 
 

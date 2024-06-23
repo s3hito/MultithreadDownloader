@@ -68,32 +68,38 @@ namespace MultithreadDownloader
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
             ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
-            if (!fs.CanWrite)
-            {
-                CloseAllStreams();
-                return;
-            } 
-            Status = "Downloading";
-            ProgressAbsolute = Start;
-          
-
-            ThreadRespStream = ThreadResponse.GetResponseStream();
+            /*
             if (!fs.CanWrite)
             {
                 CloseAllStreams();
                 return;
             }
+            */
+            Status = "Downloading";
+            ProgressAbsolute = Start;
+          
+
+            ThreadRespStream = ThreadResponse.GetResponseStream();
+            /*
+            if (fs == null)
+            {
+                CloseAllStreams();
+                return;
+            }
+            */
             byte[] buffer = new byte[1024];
             int bytesRead = 0;
             do
             {
 
                 bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);//throws an exception if timed out and ThreadRespStream is null
-                if (!fs.CanWrite)
+                
+                if (fs ==null)
                 {
                     CloseAllStreams();
                     return;
                 }
+                
                 fs.Write(buffer, 0, bytesRead);
                 fs.Flush();
                 ProgressAbsolute += bytesRead;
@@ -121,7 +127,7 @@ namespace MultithreadDownloader
 
             return res;
         }
-
+        
         public void CloseAllStreams()//never executes with fs.CanWrite
         {
             if (ThreadRespStream != null) ThreadRespStream.Close();
@@ -129,25 +135,18 @@ namespace MultithreadDownloader
             if (ThreadResponse != null) ThreadResponse.Close();
 
         }
-
+        
         public void InitiateReconnectSequence()
         {
-
-            Status = "Disconnected";
-
+         
+                Status = "Disconnected";
+                fs.Flush();
+                fs.Close();
+                fs = null;
+                CanClearLine = true;
+                Start = ProgressAbsolute;
+                Status = "Disconnected123";
             
-            fs.Flush();
-            fs.Close();
-            
-
-            CanClearLine = true;
-            
-            
-            Start = ProgressAbsolute;
-             
-            Status = "Disconnected123";
-
-
         }
     }
 }

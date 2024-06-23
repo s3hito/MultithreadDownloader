@@ -23,11 +23,12 @@ namespace MultithreadDownloader
         private long BytesLength;
         private long SectionLength;
         private long LastPiece;
+        ConsoleDrawer Drawer;
         private bool CanLaunchConsoleUpdate=true;
         private string DownloadBaseInfo;
         private bool DownloadFinished = false;
 
-        private List<DownloadThread> ThreadList = new List<DownloadThread>();
+        public List<DownloadThread> ThreadList = new List<DownloadThread>();
         private List<DownloadThread> OldThreadList = new List<DownloadThread>();
         List<Task> tasks = new List<Task>();
 
@@ -53,15 +54,20 @@ namespace MultithreadDownloader
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             BytesLength = responce.ContentLength;
-            DownloadBaseInfo = $"{URL} \n" + $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb Chunk size: {SectionLength} \n" +
+            DownloadBaseInfo = 
+                $"{URL} \n" +
+                $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb " +
+                $"Chunk size: {SectionLength} \n" +
                 $"Number of threads: {TNumber}";
+            Drawer = new ConsoleDrawer(DownloadBaseInfo, this);
+
         }
 
         public async Task PrintData()
         {
             SplitIntoSections();
             
-             await Start();
+             Start();
 
 
         }
@@ -120,58 +126,15 @@ namespace MultithreadDownloader
                 File.Delete(TempFile);
             }
         }
-        public async Task ConsoleUpdater()
-        {
-            while (!DownloadFinished) 
-            {
-                UpdateDownloadDetails();
-                Thread.Sleep(10);
-                if (!CanLaunchConsoleUpdate)
-                {
-
-                }
-            }
-        }
-        public void UpdateDownloadDetails()
-        {
-           
-            if (CanLaunchConsoleUpdate)
-            {
-                CanLaunchConsoleUpdate = false;
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine(DownloadBaseInfo);
-                foreach (DownloadThread download in ThreadList)
-                {
-                    
-                    if (download.CanClearLine)//If finished downloading clear the entire line
-                    {
-                        ClearLine();
-                        download.CanClearLine = false;
-                    }
-                    
-                    Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute-download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End}");
-                }
-
-                CanLaunchConsoleUpdate = true;
-            }
-            
-            
-        }
-
-        public void ClearLine()
-        {
-            int CurrentLineCursor = Console.CursorTop;
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, CurrentLineCursor);
-        }
-
+        
         public async Task ServicesLauncher()
         {
-            Task.Run(ConsoleUpdater);
+            Task.Run(Drawer.Start);
             Task.Run(DownloadWatcher);
             await Task.Run(TaskWatcher);
 
             DownloadFinished = true;
+            Drawer.Stop();
             CombineTempFiles();
             DeleteTempFiles();
         }
@@ -214,10 +177,16 @@ namespace MultithreadDownloader
                 {
                     if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!="Done")
                     {
+                        lock (ThreadList)
+                        {
+                            ThreadList[i].InitiateReconnectSequence();
+                            ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}_temp_{i}");
+                            tasks[i] = ThreadList[i].StartThreadAsync();
 
-                        ThreadList[i].InitiateReconnectSequence();
-                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}_temp_{i}");
-                        tasks[i] = ThreadList[i].StartThreadAsync();
+                        }
+
+
+
                     }
                 }
                 OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
