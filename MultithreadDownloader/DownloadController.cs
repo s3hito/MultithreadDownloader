@@ -57,11 +57,11 @@ namespace MultithreadDownloader
                 $"Number of threads: {TNumber}";
         }
 
-        public void PrintData()
+        public async Task PrintData()
         {
             SplitIntoSections();
             
-            Start();
+             await Start();
 
 
         }
@@ -72,7 +72,6 @@ namespace MultithreadDownloader
             for (int i = 0; i < TNumber; i++)
             {
                 ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}_temp_{i}"));
-                ThreadList[i].Size = ThreadList[i].End-ThreadList[i].Start;
             }
             ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece + 1;
 
@@ -127,6 +126,10 @@ namespace MultithreadDownloader
             {
                 UpdateDownloadDetails();
                 Thread.Sleep(10);
+                if (!CanLaunchConsoleUpdate)
+                {
+
+                }
             }
         }
         public void UpdateDownloadDetails()
@@ -170,7 +173,7 @@ namespace MultithreadDownloader
 
             DownloadFinished = true;
             CombineTempFiles();
-            //DeleteTempFiles();
+            DeleteTempFiles();
         }
 
         public async Task TaskWatcher()
@@ -211,8 +214,9 @@ namespace MultithreadDownloader
                 {
                     if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!="Done")
                     {
+
                         ThreadList[i].InitiateReconnectSequence();
-                       
+                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}_temp_{i}");
                         tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }

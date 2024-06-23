@@ -23,6 +23,7 @@ namespace MultithreadDownloader
         public int ProxyPort;
         public bool UseProxy;
         public string URL;
+        public int InstanceNumber;
         FileStream fs;
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
@@ -33,13 +34,16 @@ namespace MultithreadDownloader
             Start = start;
             End = end;
             ThreadName = threadname;
+            Size = End - Start;
             Status = "Idle";
             CanClearLine = false;
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
 
-            using (FileStream fs = new FileStream(ThreadName, FileMode.Create)) { }
+            using (FileStream fs = new FileStream(ThreadName, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
+                                                                                          //it creates a file (so that if there's a file from previous download)
+                                                                                          //and if it's a new thread for reconnection it opens a file
         }
 
         public DownloadThread Copy() 
@@ -64,7 +68,7 @@ namespace MultithreadDownloader
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
             ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
-            if (fs == null)
+            if (!fs.CanWrite)
             {
                 CloseAllStreams();
                 return;
@@ -74,7 +78,7 @@ namespace MultithreadDownloader
           
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
-            if (fs == null)
+            if (!fs.CanWrite)
             {
                 CloseAllStreams();
                 return;
@@ -84,8 +88,8 @@ namespace MultithreadDownloader
             do
             {
 
-                bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
-                if (fs == null)
+                bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);//throws an exception if timed out and ThreadRespStream is null
+                if (!fs.CanWrite)
                 {
                     CloseAllStreams();
                     return;
@@ -98,7 +102,9 @@ namespace MultithreadDownloader
 
 
             }
-            while (bytesRead > 0 && ProgressAbsolute < End); //Sometimes for large files it'll keep sending data over the end 
+            while (bytesRead > 0); //Sometimes for large files it'll keep sending data over the end.
+                                   //Add this later && ProgressAbsolute < End
+
             fs.Close();
                 
             Status = "Done";
@@ -116,26 +122,23 @@ namespace MultithreadDownloader
             return res;
         }
 
-        public void CloseAllStreams()
+        public void CloseAllStreams()//never executes with fs.CanWrite
         {
             if (ThreadRespStream != null) ThreadRespStream.Close();
 
             if (ThreadResponse != null) ThreadResponse.Close();
 
-            if (fs != null)
-            {
-                fs.Flush();
-                fs.Close();
-            }
         }
 
         public void InitiateReconnectSequence()
         {
 
             Status = "Disconnected";
-           
-            CloseAllStreams();
 
+            
+            fs.Flush();
+            fs.Close();
+            
 
             CanClearLine = true;
             
