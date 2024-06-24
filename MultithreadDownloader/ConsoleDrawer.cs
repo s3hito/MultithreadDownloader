@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,10 +14,11 @@ namespace MultithreadDownloader
         private string PrefixString;
         private DownloadController ControllerRef;
         private List<DownloadThread> DownloadList;  
-        public ConsoleDrawer(string prefixstring, List<DownloadThread> downlist, int delayms=10) 
+        
+        public ConsoleDrawer(string prefixstring, DownloadController contref, int delayms=10) 
         {
             PrefixString = prefixstring;
-            DownloadList = downlist;
+            ControllerRef = contref;
             DelayMs = delayms;
 
         }
@@ -43,26 +45,24 @@ namespace MultithreadDownloader
         {
             Console.SetCursorPosition(0,0);
             Console.WriteLine(PrefixString);
-            bool ackquireqlock=false;
-            Monitor.TryEnter(DownloadList,ref ackquireqlock);
-            if (ackquireqlock)
-            {
 
-            
-            foreach (DownloadThread download in DownloadList)//Holy crap it freezes right here I saw it in a debugger.
-                                                                         //Why tf it does that????? I got no clue for some reason it
-                                                                         //doesn't go through the list it just stays here forever.
-                                                                         //I don't fucking know why this is happening. pizdec.... 
+            DownloadList = ControllerRef.ThreadList.Select(x => x.Copy()).ToList();
+            int i = 0;
+            foreach (DownloadThread download in DownloadList)
             {
                 if (download.CanClearLine)
                 {
-                    download.CanClearLine= false;
+                    ControllerRef.ThreadList[i].CanClearLine = false;
                     ClearLine();
                 }
                 Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute - download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End}");
-
+                i++;
             }
-            }
+            
+            
+            
+           
+            
         }
         private void ClearLine()
         {

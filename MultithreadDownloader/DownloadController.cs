@@ -24,7 +24,7 @@ namespace MultithreadDownloader
         private long SectionLength;
         private long LastPiece;
         ConsoleDrawer Drawer;
-        private bool CanLaunchConsoleUpdate=true;
+        public bool Locked=false;
         private string DownloadBaseInfo;
         private bool DownloadFinished = false;
 
@@ -54,12 +54,14 @@ namespace MultithreadDownloader
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             BytesLength = responce.ContentLength;
+            SectionLength = BytesLength / TNumber;
+
             DownloadBaseInfo = 
                 $"{URL} \n" +
                 $"Length: {BytesLength} bytes ~= {BytesLength / 1024 / 1024} Mb " +
                 $"Chunk size: {SectionLength} \n" +
                 $"Number of threads: {TNumber}";
-            Drawer = new ConsoleDrawer(DownloadBaseInfo, ThreadList);
+            Drawer = new ConsoleDrawer(DownloadBaseInfo, this);
 
         }
 
@@ -73,7 +75,6 @@ namespace MultithreadDownloader
         }
         public void SplitIntoSections()
         {
-            SectionLength = BytesLength / TNumber;
             LastPiece = BytesLength % TNumber;
             for (int i = 0; i < TNumber; i++)
             {
@@ -136,7 +137,7 @@ namespace MultithreadDownloader
             DownloadFinished = true;
             Drawer.Stop();
             CombineTempFiles();
-            DeleteTempFiles();
+            //DeleteTempFiles();
         }
 
         public async Task TaskWatcher()
@@ -177,18 +178,13 @@ namespace MultithreadDownloader
                 {
                     if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!="Done")
                     {
-                        lock (ThreadList)
-                        {
-                            ThreadList[i].InitiateReconnectSequence();
-                            ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}_temp_{i}");
-                            tasks[i] = ThreadList[i].StartThreadAsync();
-
-                        }
-
-
-
+                        ThreadList[i].Suspended = true;
+                        ThreadList[i].InitiateReconnectSequence();
+                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}_temp_{i}");
+                        tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }
+
                 OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
                 Thread.Sleep(TimeOutMs);
             }
