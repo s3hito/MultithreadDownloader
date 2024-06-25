@@ -25,6 +25,7 @@ namespace MultithreadDownloader
         public string URL;
         public int InstanceNumber;
         public bool Suspended = false;
+        public DownloadController ControllerRef;//Remove later
         FileStream fs;
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
@@ -67,9 +68,11 @@ namespace MultithreadDownloader
                 ThreadRequest.Proxy = new WebProxy(ProxyAddress, ProxyPort);
             }
 
+            //ThreadRequest.AddRange(Start, ControllerRef.BytesLength);
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
-            ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well. When reconnnecting it may not always get responce
+            ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well.
+                                                                     //When reconnnecting it may not always get responce
 
             if (Suspended)
             {
@@ -99,19 +102,21 @@ namespace MultithreadDownloader
                     CloseAllStreams();
                     return;
                 }
-
                 
+                if (ProgressAbsolute + bytesRead - 1 > End)//Check for overdownload
+                {
+                    bytesRead = Convert.ToInt32(End - ProgressAbsolute + 1);
+                }
                 
-                fs.Write(buffer, 0, bytesRead);
-                fs.Flush();
                 ProgressAbsolute += bytesRead;
 
+                fs.Write(buffer, 0, bytesRead);
+
+
+                fs.Flush();
                 ProgressRelative = CalcProgress();
 
-                if (ProgressAbsolute > End)
-                {
-
-                }
+                
             }
             while (bytesRead > 0 && ProgressAbsolute < End); //Sometimes for large files it'll keep sending data over the end.
                                    //Add this later && ProgressAbsolute < End

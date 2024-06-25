@@ -11,7 +11,7 @@ using System.Threading;
 namespace MultithreadDownloader
 {
 
-    internal class DownloadController
+    public class DownloadController
     {
         
         private string Filename;
@@ -20,7 +20,7 @@ namespace MultithreadDownloader
         WebResponse responce;
         private int TNumber;
         public int TimeOutMs=3000;
-        private long BytesLength;
+        public long BytesLength; //set to private later
         private long SectionLength;
         private long LastPiece;
         ConsoleDrawer Drawer;
@@ -79,6 +79,7 @@ namespace MultithreadDownloader
             for (int i = 0; i < TNumber; i++)
             {
                 ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}_temp_{i}"));
+                ThreadList[i].ControllerRef=this; //Remove later
             }
             ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece + 1;
 
@@ -181,6 +182,7 @@ namespace MultithreadDownloader
                         ThreadList[i].Suspended = true;
                         ThreadList[i].InitiateReconnectSequence();
                         ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}_temp_{i}");
+                        ThreadList[i].ControllerRef = this;//Remove later
                         tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }
