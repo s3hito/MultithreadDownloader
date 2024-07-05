@@ -30,6 +30,7 @@ namespace MultithreadDownloader
         }
         public void Stop() 
         { 
+            Thread.Sleep(100);
             Switch= false;
         }
         private void Print() 
@@ -55,7 +56,7 @@ namespace MultithreadDownloader
                     ControllerRef.ThreadList[i].CanClearLine = false;
                     ClearLine();
                 }
-                Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute - download.Start} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End}");
+                Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute - download.Start}/{download.Size} bytes {download.ProgressRelative.ToString("N2")}% {download.Status} Start:{download.Start} End:{download.End}");
                 i++;
             }
             

@@ -13,6 +13,8 @@ namespace MultithreadDownloader
     {
         public long Start;
         public long End;
+        public string Path;
+        public string Filename;
         public string ThreadName;
         public string Status;
         public long ProgressAbsolute;
@@ -30,20 +32,20 @@ namespace MultithreadDownloader
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
 
-        public DownloadThread(string url, long start, long end, string threadname,bool useproxy=false, string proxyAdress=null, int proxyPort=0)
+        public DownloadThread(string url, long start, long end, string threadname,string path, bool useproxy=false, string proxyAdress=null, int proxyPort=0)
         {
             URL = url;
             Start = start;
             End = end;
             ThreadName = threadname;
-            Size = End - Start;
             Status = "Idle";
             CanClearLine = false;
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
+            Path= path;
 
-            using (FileStream fs = new FileStream(ThreadName, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
+            using (FileStream fs = new FileStream(Path + "//" + ThreadName, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
                                                                                           //it creates a file (so that if there's a file from previous download)
                                                                                           //and if it's a new thread for reconnection it opens a file
         }
@@ -57,9 +59,11 @@ namespace MultithreadDownloader
 
         public async Task StartThreadAsync()
         {
+            Size = End - Start;
+
             HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             fs = null;
-            fs = new FileStream(ThreadName, FileMode.Append);
+            fs = new FileStream(Path+"\\"+ThreadName, FileMode.Append);
             ProgressAbsolute = Start;
 
 
@@ -118,11 +122,14 @@ namespace MultithreadDownloader
 
                 
             }
-            while (bytesRead > 0 && ProgressAbsolute < End); //Sometimes for large files it'll keep sending data over the end.
+            while (bytesRead > 0 && ProgressAbsolute <= End); //Sometimes for large files it'll keep sending data over the end.
                                    //Add this later && ProgressAbsolute < End
 
             fs.Close();
-                
+            if (ProgressAbsolute-Start != Size)
+             {
+
+            }
             Status = "Done";
             CanClearLine = true;
             
@@ -130,7 +137,6 @@ namespace MultithreadDownloader
         }
         private float CalcProgress()
         {
-            //throw new Exception();
             long normprog = ProgressAbsolute - Start;
             long normgoal = End - Start;
             double relprog = (double)normprog / (double)normgoal;
