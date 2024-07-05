@@ -10,35 +10,40 @@ namespace MultithreadDownloader
     internal class FileManager
     {
         private string Filename;
-        private string Path;
+        private string PathToTempFolder;
+        private string PathtToMainFolder;
+        private string PathToMainFile;
         private int FileCount;
         public FileManager(string fname, string path, int filecount ) 
         {
             Filename = fname;
-            Path = path;
+            PathToTempFolder = path+"\\"+fname+".temp";
+            PathToMainFile = path + "\\" + fname;
+
+            PathtToMainFolder = path;
             FileCount = filecount;
         }
 
-        public void CreateFolder()
+        public void CreateDirectory()
         {
-            Directory.CreateDirectory( Path+"\\"+Filename+".temp");
+            Directory.CreateDirectory(PathToTempFolder);
         }
 
         public void RemoveDirectory() 
         { 
-            Directory.Delete(Path + "\\" + Filename + ".temp", true );
+            Directory.Delete(PathToTempFolder, true );
         }
 
         public void CombineTempFiles()
         {
 
-            using (FileStream OutFile = new FileStream($"{Path+"\\"+Filename}", FileMode.Create, FileAccess.Write))
+            using (FileStream OutFile = new FileStream(PathToMainFile, FileMode.Create, FileAccess.Write))
             {
                 for (int i = 0; i < FileCount; i++)
                 {
                     int bytesread = 0;
                     byte[] buffer = new byte[1024];
-                    using (FileStream InputFile = new FileStream($"{Path}\\{Filename}.temp\\{Filename}.temp{i}", FileMode.Open, FileAccess.Read))
+                    using (FileStream InputFile = new FileStream($"{PathToTempFolder}\\{Filename}.temp{i}", FileMode.Open, FileAccess.Read))
                     {
                         do
                         {

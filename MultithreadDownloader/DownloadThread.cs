@@ -14,6 +14,7 @@ namespace MultithreadDownloader
         public long Start;
         public long End;
         public string Path;
+        public string PathToFile;
         public string Filename;
         public string ThreadName;
         public string Status;
@@ -27,7 +28,6 @@ namespace MultithreadDownloader
         public string URL;
         public int InstanceNumber;
         public bool Suspended = false;
-        public DownloadController ControllerRef;//Remove later
         FileStream fs;
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
@@ -44,8 +44,9 @@ namespace MultithreadDownloader
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
             Path= path;
+            PathToFile = Path + "\\" + ThreadName;
 
-            using (FileStream fs = new FileStream(Path + "//" + ThreadName, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
+            using (FileStream fs = new FileStream(PathToFile, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
                                                                                           //it creates a file (so that if there's a file from previous download)
                                                                                           //and if it's a new thread for reconnection it opens a file
         }
@@ -63,7 +64,7 @@ namespace MultithreadDownloader
 
             HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             fs = null;
-            fs = new FileStream(Path+"\\"+ThreadName, FileMode.Append);
+            fs = new FileStream(PathToFile, FileMode.Append);
             ProgressAbsolute = Start;
 
 
@@ -75,9 +76,7 @@ namespace MultithreadDownloader
             //ThreadRequest.AddRange(Start, ControllerRef.BytesLength);
             ThreadRequest.AddRange(Start, End);
             Status = "Connecting";
-            ThreadResponse = await ThreadRequest.GetResponseAsync(); //Need to add timeout for this guy as well.
-                                                                     //When reconnnecting it may not always get responce
-
+            ThreadResponse = await ThreadRequest.GetResponseAsync();
             if (Suspended)
             {
                 CloseAllStreams();
@@ -126,10 +125,7 @@ namespace MultithreadDownloader
                                    //Add this later && ProgressAbsolute < End
 
             fs.Close();
-            if (ProgressAbsolute-Start != Size)
-             {
-
-            }
+            
             Status = "Done";
             CanClearLine = true;
             
@@ -152,8 +148,9 @@ namespace MultithreadDownloader
             if (ThreadResponse != null) ThreadResponse.Close();
 
         }
+
         
-        public void InitiateReconnectSequence()
+        public void CloseFileStream()
         {
                
                 Status = "Disconnected";
@@ -161,7 +158,6 @@ namespace MultithreadDownloader
                 fs.Close();
                 fs = null;
                 CanClearLine = true;
-                Status = "Disconnected";
             
         }
     }

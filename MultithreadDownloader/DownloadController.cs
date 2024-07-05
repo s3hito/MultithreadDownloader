@@ -17,7 +17,7 @@ namespace MultithreadDownloader
         private string Filename;
         private string URL;
         private string Path;
-        private string FullPath;
+        private string PathToTempFolder;
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
@@ -51,13 +51,16 @@ namespace MultithreadDownloader
                 ProxyAddress = _proxyaddress.Split(":")[0];
                 ProxyPort = int.Parse(_proxyaddress.Split(":")[1]);
             }
-            
-            
 
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             BytesLength = responce.ContentLength;
             SectionLength = BytesLength / TNumber;
+
+            TryGetName();
+            FMan = new FileManager(Filename, Path, TNumber);
+            FMan.CreateDirectory();
+            PathToTempFolder = Path + "\\" + Filename + ".temp";
 
             DownloadBaseInfo = 
                 $"{URL} \n" +
@@ -70,10 +73,6 @@ namespace MultithreadDownloader
 
         public async Task PrintData()
         {
-            TryGetName();
-            FullPath = Convert.ToString(Path + "\\" + Filename+".temp");
-            FMan = new FileManager(Filename, Path, TNumber);
-            FMan.CreateFolder();
 
 
             SplitIntoSections();
@@ -95,8 +94,7 @@ namespace MultithreadDownloader
             LastPiece = BytesLength % TNumber;
             for (int i = 0; i < TNumber; i++)
             {
-                ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}.temp{i}",FullPath));
-                ThreadList[i].ControllerRef=this; //Remove later
+                ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}.temp{i}", PathToTempFolder));
             }
             ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece + 1;
 
@@ -112,15 +110,8 @@ namespace MultithreadDownloader
             Console.WriteLine("Done");
         }
 
-
-        
-        
-
-
-        
         public async Task ServicesLauncher()
         {
-            //DeleteTempFiles();
 
             Task.Run(Drawer.Start);
             Task.Run(DownloadWatcher);
@@ -131,7 +122,6 @@ namespace MultithreadDownloader
             Drawer.Stop();
             FMan.CombineTempFiles();
             FMan.RemoveDirectory();
-            //DeleteTempFiles();
         }
 
         public async Task TaskWatcher()
@@ -173,13 +163,11 @@ namespace MultithreadDownloader
                     if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!="Done")
                     {
                         ThreadList[i].Suspended = true;
-                        ThreadList[i].InitiateReconnectSequence();
-                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", FullPath);
-                        ThreadList[i].ControllerRef = this;//Remove later
+                        ThreadList[i].CloseFileStream();
+                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", PathToTempFolder);
                         tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }
-
                 OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
                 Thread.Sleep(TimeOutMs);
             }
