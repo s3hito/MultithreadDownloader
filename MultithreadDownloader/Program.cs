@@ -16,7 +16,6 @@ namespace MultithreadDownloader
             //string link = "https://files.testfile.org/Video%20MP4%2FRoad%20-%20testfile.org.mp4";
             string link = "https://swupdate.openvpn.net/downloads/connect/openvpn-connect-3.4.4.3412_signed.msi";
             //string link = "https://sample.mp4-download.com/DUBAI,%20United%20Arab%20Emirates%20In%208K%20ULTRA%20HD%20HDR%2060%20FPS..mp4";
-            //string link = "https://ash-speed.hetzner.com/100MB.bin";
             //string link = "https://files.testfile.org/ZIPC/60MB-Corrupt-Testfile.Org.zip";
             //string link = "https://files.testfile.org/Video%20MP4%2FSand%20-%20testfile.org.mp4";
             //string link = "https://files.testfile.org/Video%20MP4%2FRoad%20-%20testfile.org.mp4";

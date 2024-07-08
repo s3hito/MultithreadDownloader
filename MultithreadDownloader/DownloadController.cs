@@ -21,7 +21,7 @@ namespace MultithreadDownloader
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
-        public int TimeOutMs=3000;
+        public int TimeOutMs=30000;
         public long BytesLength; //set to private later
         private long SectionLength;
         private long LastPiece;
@@ -96,7 +96,7 @@ namespace MultithreadDownloader
             {
                 ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}.temp{i}", PathToTempFolder));
             }
-            ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece + 1;
+            ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece ; //Maybe add "+1" here
 
         }
         public async Task Start()

@@ -32,20 +32,20 @@ namespace MultithreadDownloader
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
 
-        public DownloadThread(string url, long start, long end, string threadname,string path, bool useproxy=false, string proxyAdress=null, int proxyPort=0)
+        public DownloadThread(string url, long start, long end, string filename,string path, bool useproxy=false, string proxyAdress=null, int proxyPort=0)
         {
             URL = url;
             Start = start;
             End = end;
-            ThreadName = threadname;
+            Filename = filename;
             Status = "Idle";
             CanClearLine = false;
             UseProxy = useproxy;
             ProxyAddress = proxyAdress;
             ProxyPort = proxyPort;
             Path= path;
-            PathToFile = Path + "\\" + ThreadName;
-
+            PathToFile = Path + "\\" + Filename;
+            ThreadName = Filename.Split(".").Last();
             using (FileStream fs = new FileStream(PathToFile, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
                                                                                           //it creates a file (so that if there's a file from previous download)
                                                                                           //and if it's a new thread for reconnection it opens a file
