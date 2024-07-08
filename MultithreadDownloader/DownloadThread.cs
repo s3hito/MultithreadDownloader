@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -22,7 +23,9 @@ namespace MultithreadDownloader
         public float ProgressRelative;
         public bool CanClearLine;
         public long Size;
-        public string ProxyAddress;
+        public string Proxy;
+        private ProxyManager ProxyDistRef;
+        public string ProxyIpAddress;
         public int ProxyPort;
         public bool UseProxy;
         public string URL;
@@ -32,7 +35,7 @@ namespace MultithreadDownloader
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
 
-        public DownloadThread(string url, long start, long end, string filename,string path, bool useproxy=false, string proxyAdress=null, int proxyPort=0)
+        public DownloadThread(string url, long start, long end, string filename,string path, bool useproxy=false)
         {
             URL = url;
             Start = start;
@@ -41,8 +44,12 @@ namespace MultithreadDownloader
             Status = "Idle";
             CanClearLine = false;
             UseProxy = useproxy;
-            ProxyAddress = proxyAdress;
-            ProxyPort = proxyPort;
+            if (UseProxy)
+            {
+                 //Add functionality to set proxy
+            }
+
+            
             Path= path;
             PathToFile = Path + "\\" + Filename;
             ThreadName = Filename.Split(".").Last();
@@ -70,7 +77,7 @@ namespace MultithreadDownloader
 
             if (UseProxy)
             {
-                ThreadRequest.Proxy = new WebProxy(ProxyAddress, ProxyPort);
+                //ThreadRequest.Proxy = new WebProxy(ProxyAddress, ProxyPort);
             }
 
             //ThreadRequest.AddRange(Start, ControllerRef.BytesLength);
