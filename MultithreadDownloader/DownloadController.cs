@@ -35,6 +35,7 @@ namespace MultithreadDownloader
         List<Task> tasks = new List<Task>();
 
         FileManager FMan;
+        ProxyManager ProxyDistributor;
         private bool UseProxy;
         private string ProxyAddress;
         private int ProxyPort;
@@ -46,6 +47,7 @@ namespace MultithreadDownloader
             TNumber = _tnum;
             UseProxy=_useproxy;
             Path = path;
+            ProxyDistributor = new ProxyManager();
             if (_proxyaddress!=null)
             {
                 ProxyAddress = _proxyaddress.Split(":")[0];
@@ -94,7 +96,7 @@ namespace MultithreadDownloader
             LastPiece = BytesLength % TNumber;
             for (int i = 0; i < TNumber; i++)
             {
-                ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}.temp{i}", PathToTempFolder));
+                ThreadList.Add(new DownloadThread(URL, i * SectionLength, ((i + 1) * SectionLength) - 1, $"{Filename}.temp{i}", PathToTempFolder, ProxyDistributor));
             }
             ThreadList[TNumber - 1].End = ThreadList[TNumber - 1].End + LastPiece ; //Maybe add "+1" here
 
@@ -164,7 +166,7 @@ namespace MultithreadDownloader
                     {
                         ThreadList[i].Suspended = true;
                         ThreadList[i].CloseFileStream();
-                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", PathToTempFolder);
+                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", PathToTempFolder,ProxyDistributor);
                         tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }

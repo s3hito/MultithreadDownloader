@@ -10,14 +10,14 @@ using System.Xml.Schema;
 
 namespace MultithreadDownloader
 {
-    internal class ProxyManager
+    public class ProxyManager
     {
         private List<string> Addresses = new List<string>();
         private int index;
         private string Address;
         private DownloadThread IssuerThread;
         private bool OutOfProxies;
-        enum ProxyDistributionStates
+        public enum ProxyDistributionStates
         {
             NoProxy = 0,
             Single = 1,
@@ -25,25 +25,22 @@ namespace MultithreadDownloader
             Multiple = 3,
             MultipleCycle = 4
         }
-        enum OutOfProxyBehaviourStates
+        public enum OutOfProxyBehaviourStates
         {
             UseLastUsedProxy=0,
             DontUseProxy=1
         }
         private ProxyDistributionStates DistributorBehaviour;
         private OutOfProxyBehaviourStates OutOfProxyBehaviour;
-        ProxyManager(DownloadThread issuer,List<string> addresses, ProxyDistributionStates distrules=0, OutOfProxyBehaviourStates outofproxy=0)
+        public ProxyManager(List<string> addresses=null, ProxyDistributionStates distrules=0, OutOfProxyBehaviourStates outofproxy=0)
         {
-            IssuerThread = issuer;
             Addresses=addresses;
             DistributorBehaviour = distrules;
             OutOfProxyBehaviour = outofproxy;
         }
 
-       
 
-
-        public string GetProxy() {
+        public string GetProxy(DownloadThread IssuerThread) {
             switch (DistributorBehaviour)
             {
                 case ProxyDistributionStates.NoProxy:
@@ -58,7 +55,7 @@ namespace MultithreadDownloader
                     {
                         if (OutOfProxies)
                         {
-                            return ExecNoProxiesBehaviour();
+                            return ExecNoProxiesBehaviour(IssuerThread);
                         }
                         else
                         {
@@ -78,11 +75,11 @@ namespace MultithreadDownloader
                         Switch();
                         return Address;
                     }
-                default: return null;
+                default: return "";
             }
             
         }
-        private string ExecNoProxiesBehaviour()
+        private string ExecNoProxiesBehaviour(DownloadThread IssuerThread)
         {
             switch (OutOfProxyBehaviour)
             {
@@ -92,9 +89,9 @@ namespace MultithreadDownloader
                     }
                 case OutOfProxyBehaviourStates.DontUseProxy:
                     {
-                        return null;
+                        return "";
                     }
-                default: return null;
+                default: return "";
             }
         }
         private void Switch() 

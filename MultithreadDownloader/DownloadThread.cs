@@ -34,23 +34,48 @@ namespace MultithreadDownloader
         FileStream fs;
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
-
-        public DownloadThread(string url, long start, long end, string filename,string path, bool useproxy=false)
+        HttpWebRequest ThreadRequest;
+        public DownloadStates DownloadStatus;
+        public enum DownloadStates
         {
+            [Description("Idle")]
+            Idle=0,
+            [Description("Connecting")]
+            Connecting = 1,
+            [Description("Downloading")]
+            Downloading = 2,
+            [Description("Finished")]
+            Finished = 3,
+            [Description("Disconnected")]
+            Disconnected = 4,
+            [Description("Reconnecting")]
+            Reconnecting = 5
+
+        }
+        public DownloadThread(string url, long start, long end, string filename,string path, ProxyManager proxman, bool useproxy=false)
+        {
+
             URL = url;
             Start = start;
             End = end;
             Filename = filename;
-            Status = "Idle";
+            DownloadStatus = DownloadStates.Idle;
+            ProxyDistRef= proxman;
             CanClearLine = false;
             UseProxy = useproxy;
-            if (UseProxy)
+          
+            ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
+            ProxyDistRef = proxman;
+            Proxy = ProxyDistRef.GetProxy(this);
+            if (Proxy != "")
             {
-                 //Add functionality to set proxy
+                ProxyIpAddress = Proxy.Split(":")[0];
+                ProxyPort = Convert.ToInt16(Proxy.Split(":")[1]);
+                ThreadRequest.Proxy = new WebProxy(ProxyIpAddress, ProxyPort);
             }
 
-            
-            Path= path;
+
+            Path = path;
             PathToFile = Path + "\\" + Filename;
             ThreadName = Filename.Split(".").Last();
             using (FileStream fs = new FileStream(PathToFile, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
@@ -69,28 +94,20 @@ namespace MultithreadDownloader
         {
             Size = End - Start;
 
-            HttpWebRequest ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             fs = null;
             fs = new FileStream(PathToFile, FileMode.Append);
             ProgressAbsolute = Start;
 
-
-            if (UseProxy)
-            {
-                //ThreadRequest.Proxy = new WebProxy(ProxyAddress, ProxyPort);
-            }
-
             //ThreadRequest.AddRange(Start, ControllerRef.BytesLength);
             ThreadRequest.AddRange(Start, End);
-            Status = "Connecting";
+            DownloadStatus = DownloadStates.Connecting;
             ThreadResponse = await ThreadRequest.GetResponseAsync();
             if (Suspended)
             {
                 CloseAllStreams();
                 return;
             }
-
-            Status = "Downloading";
+            DownloadStatus=DownloadStates.Downloading;
           
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
@@ -132,8 +149,7 @@ namespace MultithreadDownloader
                                    //Add this later && ProgressAbsolute < End
 
             fs.Close();
-            
-            Status = "Done";
+            DownloadStatus=DownloadStates.Finished;
             CanClearLine = true;
             
            
@@ -159,8 +175,7 @@ namespace MultithreadDownloader
         
         public void CloseFileStream()
         {
-               
-                Status = "Disconnected";
+                DownloadStatus= DownloadStates.Disconnected ;
                 fs.Flush();
                 fs.Close();
                 fs = null;
