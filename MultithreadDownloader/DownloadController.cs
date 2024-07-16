@@ -7,6 +7,7 @@ using System.Net;
 using System.IO;
 using System.Globalization;
 using System.Threading;
+using static MultithreadDownloader.ProxyManager;
 
 namespace MultithreadDownloader
 {
@@ -14,7 +15,7 @@ namespace MultithreadDownloader
     public class DownloadController
     {
         
-        private string Filename;
+        private string Filename="testfile";
         private string URL;
         private string Path;
         private string PathToTempFolder;
@@ -30,29 +31,27 @@ namespace MultithreadDownloader
         private string DownloadBaseInfo;
         private bool DownloadFinished = false;
 
+
         public List<DownloadThread> ThreadList = new List<DownloadThread>();
         private List<DownloadThread> OldThreadList = new List<DownloadThread>();
         List<Task> tasks = new List<Task>();
 
         FileManager FMan;
         ProxyManager ProxyDistributor;
+        private List<string> ProxyList;
         private bool UseProxy;
         private string ProxyAddress;
         private int ProxyPort;
+        
 
-        public DownloadController(string _filename, string _url, int _tnum, string path = "",bool _useproxy=false, string _proxyaddress=null)
+        public DownloadController( string _url, int _tnum, FileManager fileman,  string path, ProxyDistributionStates proxydistrules, OutOfProxyBehaviourStates outofproxy)
         {
-            Filename = _filename;
+            
             URL = _url;
             TNumber = _tnum;
-            UseProxy=_useproxy;
             Path = path;
-            ProxyDistributor = new ProxyManager();
-            if (_proxyaddress!=null)
-            {
-                ProxyAddress = _proxyaddress.Split(":")[0];
-                ProxyPort = int.Parse(_proxyaddress.Split(":")[1]);
-            }
+            ProxyList=fileman.FetchProxyFile();
+            ProxyDistributor = new ProxyManager(proxydistrules,null,outofproxy);
 
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
@@ -60,7 +59,9 @@ namespace MultithreadDownloader
             SectionLength = BytesLength / TNumber;
 
             TryGetName();
-            FMan = new FileManager(Filename, Path, TNumber);
+            FMan = fileman;
+            FMan.SetValues(Filename, Path, TNumber);
+
             FMan.CreateDirectory();
             PathToTempFolder = Path + "\\" + Filename + ".temp";
 
@@ -134,7 +135,8 @@ namespace MultithreadDownloader
 
                 foreach (DownloadThread download in ThreadList)
                 {
-                    if (download.Status=="Done") 
+
+                    if (download.DownloadStatus.GetDescription()=="Finished") //Edit later
                     {
                         flag = true;
                     }

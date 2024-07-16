@@ -32,7 +32,7 @@ namespace MultithreadDownloader
         }
         private ProxyDistributionStates DistributorBehaviour;
         private OutOfProxyBehaviourStates OutOfProxyBehaviour;
-        public ProxyManager(List<string> addresses=null, ProxyDistributionStates distrules=0, OutOfProxyBehaviourStates outofproxy=0)
+        public ProxyManager(ProxyDistributionStates distrules =0, List<string> addresses = null, OutOfProxyBehaviourStates outofproxy =0)
         {
             Addresses=addresses;
             DistributorBehaviour = distrules;

@@ -3,21 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Configuration;
+using System.Collections.Specialized;
 
 namespace MultithreadDownloader
 {
     
-    internal class FileManager
+    public class FileManager
     {
         private string Filename;
         private string PathToTempFolder;
         private string PathtToMainFolder;
         private string PathToMainFile;
         private int FileCount;
-        public FileManager(string fname, string path, int filecount ) 
+        
+        public void SetValues(string fname, string path, int filecount)
         {
             Filename = fname;
-            PathToTempFolder = path+"\\"+fname+".temp";
+            PathToTempFolder = path + "\\" + fname + ".temp";
             PathToMainFile = path + "\\" + fname;
 
             PathtToMainFolder = path;
@@ -32,6 +35,16 @@ namespace MultithreadDownloader
         public void RemoveDirectory() 
         { 
             Directory.Delete(PathToTempFolder, true );
+        }
+
+        public List<string> FetchProxyFile()
+        {
+            return ;
+        }
+
+        public void DumpProxyList()
+        {
+
         }
 
         public void CombineTempFiles()
@@ -65,5 +78,13 @@ namespace MultithreadDownloader
                 File.Delete(TempFile);
             }
         }
+
+        public KeyValueConfigurationCollection LoadConfiguration()
+        {
+            Configuration ConfManager = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            KeyValueConfigurationCollection ConfCollection = ConfManager.AppSettings.Settings;
+            return ConfCollection;
+        }
+
     }
 }
