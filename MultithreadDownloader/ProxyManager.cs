@@ -28,7 +28,8 @@ namespace MultithreadDownloader
         public enum OutOfProxyBehaviourStates
         {
             UseLastUsedProxy=0,
-            DontUseProxy=1
+            StartOver=1,
+            DontUseProxy=2
         }
         private ProxyDistributionStates DistributorBehaviour;
         private OutOfProxyBehaviourStates OutOfProxyBehaviour;
@@ -41,6 +42,8 @@ namespace MultithreadDownloader
 
 
         public string GetProxy(DownloadThread IssuerThread) {
+            if (IssuerThread.ReconnectCount > IssuerThread.MaxReconnect) return IssuerThread.Proxy;
+            IssuerThread.ReconnectCount = 0;
             switch (DistributorBehaviour)
             {
                 case ProxyDistributionStates.NoProxy:
@@ -86,6 +89,14 @@ namespace MultithreadDownloader
                 case OutOfProxyBehaviourStates.UseLastUsedProxy:
                     {
                         return IssuerThread.Proxy;
+                    }
+                case OutOfProxyBehaviourStates.StartOver:
+                    {
+                        index = 0;
+                        Address = Addresses[index];
+                        Switch();
+                        OutOfProxies = false;
+                        return Address;
                     }
                 case OutOfProxyBehaviourStates.DontUseProxy:
                     {

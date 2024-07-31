@@ -37,14 +37,18 @@ namespace MultithreadDownloader
             Directory.Delete(PathToTempFolder, true );
         }
 
-        public List<string> FetchProxyFile()
+        public List<string> FetchProxyFile(string proxyfilename="proxylist.txt")
         {
-            return ;
+            using (FileStream fs = new FileStream(Directory.GetCurrentDirectory() + $"\\{proxyfilename}", FileMode.OpenOrCreate)){}
+            List<string> lines =File.ReadLines(proxyfilename).ToList();
+            
+            return lines;
         }
 
-        public void DumpProxyList()
+        public void DumpProxyList(List<string> proxylist)
         {
-
+            using (FileStream fs = new FileStream(Directory.GetCurrentDirectory() + "\\proxylist.txt", FileMode.OpenOrCreate)) { }
+            File.WriteAllLines("proxylist.txt", proxylist);
         }
 
         public void CombineTempFiles()

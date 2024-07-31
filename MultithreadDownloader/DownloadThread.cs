@@ -18,7 +18,6 @@ namespace MultithreadDownloader
         public string PathToFile;
         public string Filename;
         public string ThreadName;
-        public string Status;
         public long ProgressAbsolute;
         public float ProgressRelative;
         public bool CanClearLine;
@@ -27,10 +26,13 @@ namespace MultithreadDownloader
         private ProxyManager ProxyDistRef;
         public string ProxyIpAddress;
         public int ProxyPort;
-        public bool UseProxy;
+        public int ReconnectCount;
+        public int MaxReconnect;
+        private bool ChangeProxyOnMaxReconnect;
         public string URL;
         public int InstanceNumber;
         public bool Suspended = false;
+        public long Accumulated;
         FileStream fs;
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
@@ -52,7 +54,7 @@ namespace MultithreadDownloader
             Reconnecting = 5
 
         }
-        public DownloadThread(string url, long start, long end, string filename,string path, ProxyManager proxman, bool useproxy=false)
+        public DownloadThread(string url, long start, long end, string filename,string path, ProxyManager proxman,string prox="", long acum=0, int reccount=-1, int maxrec=3)
         {
 
             URL = url;
@@ -62,11 +64,16 @@ namespace MultithreadDownloader
             DownloadStatus = DownloadStates.Idle;
             ProxyDistRef= proxman;
             CanClearLine = false;
-            UseProxy = useproxy;
-          
+            Accumulated = acum;
+            ReconnectCount= reccount;
+            MaxReconnect = maxrec;
             ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             ProxyDistRef = proxman;
-            Proxy = ProxyDistRef.GetProxy(this);
+            Proxy = prox;
+            lock (ProxyDistRef)
+            {
+                Proxy = ProxyDistRef.GetProxy(this);
+            }
             if (Proxy != "")
             {
                 ProxyIpAddress = Proxy.Split(":")[0];
@@ -141,6 +148,7 @@ namespace MultithreadDownloader
 
 
                 fs.Flush();
+                Accumulated += bytesRead;
                 ProgressRelative = CalcProgress();
 
                 
@@ -175,11 +183,12 @@ namespace MultithreadDownloader
         
         public void CloseFileStream()
         {
-                DownloadStatus= DownloadStates.Disconnected ;
-                fs.Flush();
-                fs.Close();
-                fs = null;
-                CanClearLine = true;
+            DownloadStatus= DownloadStates.Disconnected ;
+            fs.Flush();
+            fs.Close();
+            fs = null;
+            CanClearLine = true;
+            ReconnectCount++;
             
         }
     }

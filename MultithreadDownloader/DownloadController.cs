@@ -8,6 +8,8 @@ using System.IO;
 using System.Globalization;
 using System.Threading;
 using static MultithreadDownloader.ProxyManager;
+using System.Configuration;
+using static MultithreadDownloader.DownloadThread;
 
 namespace MultithreadDownloader
 {
@@ -22,10 +24,11 @@ namespace MultithreadDownloader
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
-        public int TimeOutMs=30000;
+        public int TimeOutMs=3000;
         public long BytesLength; //set to private later
         private long SectionLength;
         private long LastPiece;
+        public long TotalProgress;
         ConsoleDrawer Drawer;
         public bool Locked=false;
         private string DownloadBaseInfo;
@@ -39,19 +42,21 @@ namespace MultithreadDownloader
         FileManager FMan;
         ProxyManager ProxyDistributor;
         private List<string> ProxyList;
-        private bool UseProxy;
-        private string ProxyAddress;
-        private int ProxyPort;
+
         
 
-        public DownloadController( string _url, int _tnum, FileManager fileman,  string path, ProxyDistributionStates proxydistrules, OutOfProxyBehaviourStates outofproxy)
+        public DownloadController( string _url, int _tnum, FileManager fileman, KeyValueConfigurationCollection config)
         {
             
             URL = _url;
             TNumber = _tnum;
-            Path = path;
+            Path = config["Path"].Value;
             ProxyList=fileman.FetchProxyFile();
-            ProxyDistributor = new ProxyManager(proxydistrules,null,outofproxy);
+            ProxyDistributor = new ProxyManager(
+                (ProxyDistributionStates)Enum.Parse(typeof(ProxyDistributionStates), config["ProxyRule"].Value),
+                ProxyList,
+                (OutOfProxyBehaviourStates)Enum.Parse(typeof(OutOfProxyBehaviourStates), config["OutOfProxyRule"].Value));
+
 
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
@@ -136,7 +141,7 @@ namespace MultithreadDownloader
                 foreach (DownloadThread download in ThreadList)
                 {
 
-                    if (download.DownloadStatus.GetDescription()=="Finished") //Edit later
+                    if (download.DownloadStatus==DownloadStates.Finished)
                     {
                         flag = true;
                     }
@@ -164,11 +169,11 @@ namespace MultithreadDownloader
             {
                 for (int i=0;i<TNumber;i++)
                 {
-                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!="Done")
+                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].DownloadStatus!=DownloadStates.Finished)
                     {
                         ThreadList[i].Suspended = true;
                         ThreadList[i].CloseFileStream();
-                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", PathToTempFolder,ProxyDistributor);
+                        ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", PathToTempFolder,ProxyDistributor, ThreadList[i].Proxy , ThreadList[i].Accumulated, ThreadList[i].ReconnectCount);
                         tasks[i] = ThreadList[i].StartThreadAsync();
                     }
                 }
