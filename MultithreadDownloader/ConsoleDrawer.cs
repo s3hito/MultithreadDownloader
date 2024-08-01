@@ -70,6 +70,7 @@ namespace MultithreadDownloader
                 }
                 Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute - download.Start}/{download.Size} bytes {download.DownloadStatus.GetDescription()} Proxy: {download.Proxy} Reconnections: {download.ReconnectCount}"); //Start:{{download.Start}} End:{{download.End
                 TotalProgress += download.Accumulated;
+              
                 i++;
             }
             

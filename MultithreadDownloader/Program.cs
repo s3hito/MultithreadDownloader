@@ -25,7 +25,7 @@ namespace MultithreadDownloader
             //DownloadController dnl = new DownloadController("testfile.mp4", link, 1, _useproxy: true, _proxyaddress: "117.250.3.58:8080");// with proxy
             FileManager FMan = new FileManager();
             KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
-            DownloadController dnl = new DownloadController(link, 15, FMan, Config);
+            DownloadController dnl = new DownloadController(link, 10, FMan, Config);
             await dnl.PrintData();
 
 

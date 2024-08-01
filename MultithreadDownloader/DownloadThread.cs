@@ -73,11 +73,12 @@ namespace MultithreadDownloader
             lock (ProxyDistRef)
             {
                 Proxy = ProxyDistRef.GetProxy(this);
+
             }
             if (Proxy != "")
             {
                 ProxyIpAddress = Proxy.Split(":")[0];
-                ProxyPort = Convert.ToInt16(Proxy.Split(":")[1]);
+                ProxyPort = Convert.ToInt32(Proxy.Split(":")[1]);
                 ThreadRequest.Proxy = new WebProxy(ProxyIpAddress, ProxyPort);
             }
 
@@ -187,7 +188,6 @@ namespace MultithreadDownloader
             fs.Flush();
             fs.Close();
             fs = null;
-            CanClearLine = true;
             ReconnectCount++;
             
         }

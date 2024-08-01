@@ -42,7 +42,8 @@ namespace MultithreadDownloader
 
 
         public string GetProxy(DownloadThread IssuerThread) {
-            if (IssuerThread.ReconnectCount > IssuerThread.MaxReconnect) return IssuerThread.Proxy;
+
+            if (IssuerThread.ReconnectCount < IssuerThread.MaxReconnect & IssuerThread.Proxy!="") return IssuerThread.Proxy;
             IssuerThread.ReconnectCount = 0;
             switch (DistributorBehaviour)
             {

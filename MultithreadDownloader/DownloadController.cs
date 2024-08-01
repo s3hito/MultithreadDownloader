@@ -24,7 +24,7 @@ namespace MultithreadDownloader
         HttpWebRequest request;
         WebResponse responce;
         private int TNumber;
-        public int TimeOutMs=3000;
+        public int TimeOutMs=2000;
         public long BytesLength; //set to private later
         private long SectionLength;
         private long LastPiece;
@@ -174,7 +174,9 @@ namespace MultithreadDownloader
                         ThreadList[i].Suspended = true;
                         ThreadList[i].CloseFileStream();
                         ThreadList[i] = new DownloadThread(URL, ThreadList[i].ProgressAbsolute, ThreadList[i].End, $"{Filename}.temp{i}", PathToTempFolder,ProxyDistributor, ThreadList[i].Proxy , ThreadList[i].Accumulated, ThreadList[i].ReconnectCount);
+                        ThreadList[i].CanClearLine = true;
                         tasks[i] = ThreadList[i].StartThreadAsync();
+
                     }
                 }
                 OldThreadList = ThreadList.Select(x => x.Copy()).ToList();
