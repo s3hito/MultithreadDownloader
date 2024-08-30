@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MultithreadDownloader
 {
@@ -13,9 +14,7 @@ namespace MultithreadDownloader
         private int DelayMs;
         private bool Switch;
         private string PrefixString;
-        private long TotalProgress;
         private long TotalSize;
-        private double ProgressPercent;
         private string ProgressBar;
         private long PGChunkSize;
         private DownloadController ControllerRef;
@@ -24,11 +23,16 @@ namespace MultithreadDownloader
         
         public ConsoleDrawer(string prefixstring, DownloadController contref, int delayms=10) 
         {
-            PrefixString = prefixstring; 
+           
 
             ControllerRef = contref;
             DelayMs = delayms;
             TotalSize = contref.BytesLength;
+
+            PrefixString = $"{contref.URL} \n" +
+               $"Size: {contref.Size}\n" +
+               $"Chunk size: {contref.SectionLength} \n" +
+               $"Number of threads: {contref.ThreadNumber}";
         }
 
         public async Task Start()
@@ -48,16 +52,17 @@ namespace MultithreadDownloader
                 Update();
                 Thread.Sleep(DelayMs);
             }
+            Console.WriteLine("Done");
+
 
         }
         private void Update()
         {
             Console.SetCursorPosition(0,0);
             Console.WriteLine(PrefixString);
-            ProgressPercent= ((double)TotalProgress / (double)TotalSize) *100;
             MakeProgressBar(20);
-            Console.WriteLine($"Progress:{ProgressBar} {ProgressPercent.ToString("N2")}%");
-            TotalProgress = 0;
+            Console.WriteLine($"Progress:{ProgressBar} {ControllerRef.ProgressPercentage.ToString("N2")}%");
+            
             DownloadList = ControllerRef.ThreadList.Select(x => x.Copy()).ToList();
             int i = 0;
             foreach (DownloadThread download in DownloadList)
@@ -65,11 +70,9 @@ namespace MultithreadDownloader
                 if (download.CanClearLine)
                 {
                     ControllerRef.ThreadList[i].CanClearLine = false;
-
                     ClearLine();
                 }
                 Console.WriteLine($"{download.ThreadName}: {download.ProgressAbsolute - download.Start}/{download.Size} bytes {download.DownloadStatus.GetDescription()} Proxy: {download.Proxy} Reconnections: {download.ReconnectCount}"); //Start:{{download.Start}} End:{{download.End
-                TotalProgress += download.Accumulated;
               
                 i++;
             }
@@ -81,21 +84,21 @@ namespace MultithreadDownloader
 
             ProgressBar = "[";
 
-            for (int i = 0; i < TotalProgress / PGChunkSize; i++)
+            for (int i = 0; i < ControllerRef.TotalProgress / PGChunkSize; i++)
             {
                 ProgressBar += "=";
             }
-            if (TotalProgress % PGChunkSize > PGChunkSize / 2)
+            if (ControllerRef.TotalProgress % PGChunkSize > PGChunkSize / 2)
             {
                 ProgressBar += "-";
             }
-            else if (TotalProgress / TotalSize < 1)
+            else if (ControllerRef.TotalProgress / TotalSize < 1)
             {
                 ProgressBar += " ";
             }
            
 
-            for (int i = 0; i < length - 1 - (TotalProgress / PGChunkSize); i++)
+            for (int i = 0; i < length - 1 - (ControllerRef.TotalProgress / PGChunkSize); i++)
             {
                 ProgressBar += " ";
             }
