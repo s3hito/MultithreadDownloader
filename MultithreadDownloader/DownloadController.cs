@@ -15,7 +15,7 @@ using System.ComponentModel;
 namespace MultithreadDownloader 
 {
 
-    public class DownloadController : INotifyPropertyChanged
+    public class DownloadController : ObservableObject
     {
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -28,8 +28,8 @@ namespace MultithreadDownloader
         private HttpWebRequest request;
         private WebResponse responce;
         private int _tnumber;
-        private int _timeoutms=2000;
-        private string _status;
+        private int _timeoutms=3000;
+        private DownloadStatuses _status;
         private long _byteslength; 
         private long _sectionlenth;
         private long LastPiece;
@@ -40,7 +40,10 @@ namespace MultithreadDownloader
         private bool Locked=false;
         private string DownloadBaseInfo;
         private bool DownloadFinished = false;
+        public int TestVal=50;
 
+
+        
 
         private List<DownloadThread> _threadlist = new List<DownloadThread>();
         private List<DownloadThread> OldThreadList = new List<DownloadThread>();
@@ -53,16 +56,16 @@ namespace MultithreadDownloader
         static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 
 
-        public string Filename { get { return _filename; } set {_filename=value; OnPropertyChanged("Filename"); } }
+        public string Filename { get { return _filename; } set {_filename=value; OnPropertyChanged(); } }
         public string Size { get { return SizeSuffix(_byteslength); } }
-        public double ProgressPercentage { get { return _progresspercent; } set { _progresspercent = value; OnPropertyChanged("ProgressPercentage"); } } //
+        public double ProgressPercentage { get { return _progresspercent; } set { _progresspercent = value; OnPropertyChanged(); } } 
         public string URL { get { return _url; } }
         public int ThreadNumber { get { return _tnumber; } }
         public int TimeOutMs { get { return _timeoutms; } set { _timeoutms = value; } }
-        public string Status { get { return _status; }  set { _status = value; OnPropertyChanged("Status"); } }
+        public DownloadStatuses Status { get { return _status; }  set { _status = value; OnPropertyChanged(); } }
         public long BytesLength { get { return _byteslength; } }
-        public long SectionLength { get { return _sectionlenth; } }
-        public long TotalProgress {  get { return _totalprogress; } }
+        public long SectionLength { get { return _sectionlenth; } set { _sectionlenth = value; OnPropertyChanged(); } }
+        public long TotalProgress {  get { return _totalprogress; } set { _totalprogress = value; OnPropertyChanged(); } }
         public List<DownloadThread> ThreadList { get { return _threadlist; } }
 
 
@@ -72,7 +75,8 @@ namespace MultithreadDownloader
 
         public DownloadController( string url, int _tnum, FileManager fileman, KeyValueConfigurationCollection config, bool useconsole=true)
         {
-            Status = "Idle";
+            Status = DownloadStatuses.Idle;
+            
             _url = url;
             _tnumber = _tnum;
             Path = config["Path"].Value;
@@ -86,7 +90,7 @@ namespace MultithreadDownloader
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             _byteslength = responce.ContentLength;
-            _sectionlenth = _byteslength / _tnumber;
+            SectionLength = _byteslength / _tnumber;
 
             TryGetName();
             FMan = fileman;
@@ -103,14 +107,11 @@ namespace MultithreadDownloader
 
         }
 
-        void OnPropertyChanged(string PropName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropName));
-        }
+       
 
         public async Task PrintData()
         {
-
+            //Launches main process for controller 
 
             SplitIntoSections();
              Start();
@@ -138,14 +139,14 @@ namespace MultithreadDownloader
         }
         public async Task Start()
         {
-            Status = "Downloading";
+            Status = DownloadStatuses.Downloading;
             foreach (DownloadThread thread in ThreadList)
             {
                 tasks.Add(thread.StartThreadAsync());
             }
 
             await ServicesLauncher();
-            Status = "Finished";
+            Status = DownloadStatuses.Finished;
         }
 
         public async Task ServicesLauncher()
@@ -180,7 +181,7 @@ namespace MultithreadDownloader
                 foreach (DownloadThread download in ThreadList)
                 {
 
-                    if (download.DownloadStatus==DownloadStates.Finished)
+                    if (download.Status==DownloadStatuses.Finished.Status)
                     {
                         flag = true;
                     }
@@ -208,7 +209,7 @@ namespace MultithreadDownloader
             {
                 for (int i=0;i<_tnumber;i++)
                 {
-                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].DownloadStatus!=DownloadStates.Finished)
+                    if (ThreadList[i].ProgressAbsolute == OldThreadList[i].ProgressAbsolute && ThreadList[i].Status!=DownloadStatuses.Finished.Status)
                     {
                         ThreadList[i].Suspended = true;
                         ThreadList[i].CloseFileStream();
@@ -226,11 +227,11 @@ namespace MultithreadDownloader
         {
             while (!DownloadFinished)
             {
-                _totalprogress = 0;
+                TotalProgress = 0;
                 
                 foreach (DownloadThread download in ThreadList)
                 {
-                    _totalprogress += download.Accumulated;
+                    TotalProgress += download.Accumulated;
                 }
                 ProgressPercentage = (((double)TotalProgress / (double)BytesLength) * 100);
                 Thread.Sleep(10);

@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    x:Class="WFPUI.Resources"
-                    x:ClassModifier="public">
+					x:Class="WFPUI.Resources.ButtonDictionary"
+					
+                    >
         <!-- This style is used for buttons, to remove the WPF default 'animated' mouse over effect -->
     <Style x:Key="DefaultbtnOverride" TargetType="Button">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -23,8 +24,7 @@
     </Style>
     <Style TargetType="{x:Type ListViewItem}" x:Key="itemstyle">
         <Setter Property="HorizontalContentAlignment" Value="Center" />
-        <!--        <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick"/>
--->
+         <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick"/>
     </Style>
    
 </ResourceDictionary>

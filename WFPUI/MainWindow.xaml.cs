@@ -36,7 +36,7 @@ namespace WFPUI
  
 
             FileManager FMan = new FileManager();
-            string link = "https://sample.mp4-download.com/DUBAI,%20United%20Arab%20Emirates%20In%208K%20ULTRA%20HD%20HDR%2060%20FPS..mp4";
+            string link = "https://www.spiggle-theis.com/images/videos/BET_.mp4";
             KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
             dnl = new DownloadController(link, 10, FMan, Config, false);
 

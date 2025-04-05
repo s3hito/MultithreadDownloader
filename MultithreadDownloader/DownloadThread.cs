@@ -10,10 +10,11 @@ using System.Threading.Tasks;
 
 namespace MultithreadDownloader
 {
-    public class DownloadThread
+    public class DownloadThread : ObservableObject
     {
         public long Start;
         public long End;
+        private int _seqnumber;
         public string Path;
         public string PathToFile;
         public string Filename;
@@ -32,28 +33,18 @@ namespace MultithreadDownloader
         public string URL;
         public int InstanceNumber;
         public bool Suspended = false;
-        public long Accumulated;
+        public long _accumulated;
         FileStream fs;
         WebResponse ThreadResponse;
         Stream ThreadRespStream;
         HttpWebRequest ThreadRequest;
-        public DownloadStates DownloadStatus;
-        public enum DownloadStates
-        {
-            [Description("Idle")]
-            Idle=0,
-            [Description("Connecting")]
-            Connecting = 1,
-            [Description("Downloading")]
-            Downloading = 2,
-            [Description("Finished")]
-            Finished = 3,
-            [Description("Disconnected")]
-            Disconnected = 4,
-            [Description("Reconnecting")]
-            Reconnecting = 5
+        private DownloadStatuses _status;
 
-        }
+        public int SequenceNumber { get { return _seqnumber; }  set { _seqnumber = value; OnPropertyChanged(); } }
+        public long Accumulated { get { return _accumulated; } set { _accumulated = value; OnPropertyChanged(); } }
+        public DownloadStatuses Status { get { return _status; } set { _status = value; OnPropertyChanged(); } }
+
+       
         public DownloadThread(string url, long start, long end, string filename,string path, ProxyManager proxman,string prox="", long acum=0, int reccount=-1, int maxrec=3)
         {
 
@@ -61,7 +52,7 @@ namespace MultithreadDownloader
             Start = start;
             End = end;
             Filename = filename;
-            DownloadStatus = DownloadStates.Idle;
+            Status = DownloadStatuses.Idle;
             ProxyDistRef= proxman;
             CanClearLine = false;
             Accumulated = acum;
@@ -106,16 +97,15 @@ namespace MultithreadDownloader
             fs = new FileStream(PathToFile, FileMode.Append);
             ProgressAbsolute = Start;
 
-            //ThreadRequest.AddRange(Start, ControllerRef.BytesLength);
             ThreadRequest.AddRange(Start, End);
-            DownloadStatus = DownloadStates.Connecting;
+            Status = DownloadStatuses.Connecting;
             ThreadResponse = await ThreadRequest.GetResponseAsync();
             if (Suspended)
             {
                 CloseAllStreams();
                 return;
             }
-            DownloadStatus=DownloadStates.Downloading;
+            Status = DownloadStatuses.Downloading;
           
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
@@ -131,7 +121,7 @@ namespace MultithreadDownloader
             do
             {
 
-                bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);//throws an exception if timed out and ThreadRespStream is null
+                bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
                 if (Suspended)
                 {
                     CloseAllStreams();
@@ -158,7 +148,7 @@ namespace MultithreadDownloader
                                    //Add this later && ProgressAbsolute < End
 
             fs.Close();
-            DownloadStatus=DownloadStates.Finished;
+            Status=DownloadStatuses.Finished;
             CanClearLine = true;
             
            
@@ -184,7 +174,7 @@ namespace MultithreadDownloader
         
         public void CloseFileStream()
         {
-            DownloadStatus= DownloadStates.Disconnected ;
+            Status= DownloadStatuses.Disconnected ;
             fs.Flush();
             fs.Close();
             fs = null;
