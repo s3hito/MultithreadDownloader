@@ -4,8 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WFPUI"
+        xmlns:viewmodels="clr-namespace:WFPUI.ViewModels"
         mc:Ignorable="d"
         Title="DownloadDetailsWindow" Height="450" Width="800">
+    <Window.DataContext>
+        <viewmodels:DownloadViewModel/>
+    </Window.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
@@ -31,44 +35,40 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
-        <ItemsControl Name="icDownloadDetails" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" BorderBrush="Gray" BorderThickness="1" >
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition  Width="Auto"/>
-                            <ColumnDefinition  Width="5"/>
-                            
-                            <ColumnDefinition  Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Link"/>
-                        <TextBlock Grid.Column="0"  Grid.Row="1" Text="Status"/>
-                        <TextBlock Grid.Column="0" Grid.Row="2" Text="File size"/>
-                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Dowloaded"/>
-                        <TextBlock Grid.Column="0" Grid.Row="4" Text="Chunck size"/>
+        <ItemsControl Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="4" BorderBrush="Gray" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="20"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Link" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="0"  Grid.Row="1" Text="Status" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="0" Grid.Row="2" Text="File size" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="0" Grid.Row="3" Text="Dowloaded" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="0" Grid.Row="4" Text="Chunck size" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding URL, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding Status, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding Size, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding TotalProgress, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding SectionLength, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
 
-                        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Path=URL, UpdateSourceTrigger=PropertyChanged}" />
-                        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding Path=Status, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding Path=Size, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding Path=TotalProgress, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding Path=SectionLength, UpdateSourceTrigger=PropertyChanged}"/>
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
         </ItemsControl>
+
 
         <ProgressBar 
             Grid.Row="3"  Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
             Value="{Binding Path=ProgressPercentage, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"/>
-        <Button Grid.Row="5" Grid.Column="1" x:Name="btnPause" Content="Pause" HorizontalAlignment="Stretch"/>
-        <Button Grid.Row="5" Grid.Column="3" x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Stretch" />
+        <Button Grid.Row="5" Grid.Column="1" x:Name="btnPause" Content="Pause" HorizontalAlignment="Stretch" Command="{Binding PauseCommand}"/>
+        <Button Grid.Row="5" Grid.Column="3" x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Stretch" Command="{Binding CancelCommand}"/>
 
         <ListView Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="4" x:Name="lvThreadList" SizeChanged="lvThreadList_SizeChanged">
             <ListView.View >

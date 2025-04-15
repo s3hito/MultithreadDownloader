@@ -28,21 +28,19 @@ namespace WFPUI
         public DownloadDetailsWindow()
         {
             InitializeComponent();
+            /*
             FileManager FMan = new FileManager();
             string link = "https://www.spiggle-theis.com/images/videos/BET_.mp4";
             KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
             dnl = new DownloadController(link, 10, FMan, Config, false);
-            this.DataContext = dnl;
             AddDownload();
+            */
         }
 
         public void AddDownload()
         {
 
-            dnl.PrintData();
-            icDownloadDetails.Items.Add(dnl);
-            ThreadList = dnl.ThreadList;
-            lvThreadList.ItemsSource = ThreadList;
+           
 
         }
         private void lvThreadList_SizeChanged(object sender, SizeChangedEventArgs e)

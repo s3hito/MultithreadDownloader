@@ -16,6 +16,8 @@ namespace MultithreadDownloader
         private string PathtToMainFolder;
         private string PathToMainFile;
         private int FileCount;
+        public Action RemoveDirectory;
+        public Action CreateDirectory;
         
         public void SetValues(string fname, string path, int filecount)
         {
@@ -25,17 +27,14 @@ namespace MultithreadDownloader
 
             PathtToMainFolder = path;
             FileCount = filecount;
+
+            RemoveDirectory = () => Directory.Delete(PathToTempFolder, true);
+            CreateDirectory = () => Directory.CreateDirectory(PathToTempFolder);
         }
 
-        public void CreateDirectory()
-        {
-            Directory.CreateDirectory(PathToTempFolder);
-        }
 
-        public void RemoveDirectory() 
-        { 
-            Directory.Delete(PathToTempFolder, true );
-        }
+        
+        
 
         public List<string> FetchProxyFile(string proxyfilename="proxylist.txt")
         {

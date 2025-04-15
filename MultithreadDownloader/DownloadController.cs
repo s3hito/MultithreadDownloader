@@ -18,7 +18,6 @@ namespace MultithreadDownloader
     public class DownloadController : ObservableObject
     {
 
-        public event PropertyChangedEventHandler? PropertyChanged;
 
 
         private string _filename="testfile";
@@ -52,20 +51,24 @@ namespace MultithreadDownloader
         private FileManager FMan;
         private ProxyManager ProxyDistributor;
         private List<string> ProxyList;
+        public Action Pause;
+        public Action Cancel;
 
         static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 
 
         public string Filename { get { return _filename; } set {_filename=value; OnPropertyChanged(); } }
         public string Size { get { return SizeSuffix(_byteslength); } }
-        public double ProgressPercentage { get { return _progresspercent; } set { _progresspercent = value; OnPropertyChanged(); } } 
+        public double ProgressPercentage { get { return _progresspercent; } set { 
+                _progresspercent = value; OnPropertyChanged(); } } 
         public string URL { get { return _url; } }
         public int ThreadNumber { get { return _tnumber; } }
         public int TimeOutMs { get { return _timeoutms; } set { _timeoutms = value; } }
         public DownloadStatuses Status { get { return _status; }  set { _status = value; OnPropertyChanged(); } }
         public long BytesLength { get { return _byteslength; } }
         public long SectionLength { get { return _sectionlenth; } set { _sectionlenth = value; OnPropertyChanged(); } }
-        public long TotalProgress {  get { return _totalprogress; } set { _totalprogress = value; OnPropertyChanged(); } }
+        public long TotalProgress {  get { return _totalprogress; } 
+            set { _totalprogress = value; OnPropertyChanged(); } }
         public List<DownloadThread> ThreadList { get { return _threadlist; } }
 
 
@@ -75,6 +78,12 @@ namespace MultithreadDownloader
 
         public DownloadController( string url, int _tnum, FileManager fileman, KeyValueConfigurationCollection config, bool useconsole=true)
         {
+            Pause = () => 
+            {
+            
+            };
+            Cancel = () => { };
+            
             Status = DownloadStatuses.Idle;
             
             _url = url;
@@ -265,6 +274,8 @@ namespace MultithreadDownloader
                 SizeSuffixes[mag]);
         }
 
+
+         
 
     }
 }
