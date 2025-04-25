@@ -12,17 +12,27 @@ namespace MultithreadDownloader
         public string Status { get; private set; }
 
 
-        public static DownloadStatuses Idle { get { return new DownloadStatuses("Idle"); } }
-        public static DownloadStatuses Connecting { get { return new DownloadStatuses("Connecting"); } }
-        public static DownloadStatuses Downloading { get { return new DownloadStatuses("Downloading"); } }
-        public static DownloadStatuses Finished { get { return new DownloadStatuses("Finished"); } }
-        public static DownloadStatuses Disconnected { get { return new DownloadStatuses("Disconnected"); } }
-        public static DownloadStatuses Reconnecting { get { return new DownloadStatuses("Reconnecting"); } }
+        private static readonly DownloadStatuses _idle = new DownloadStatuses("Idle");
+        private static readonly DownloadStatuses _connecting = new DownloadStatuses("Connecting");
+        private static readonly DownloadStatuses _downloading = new DownloadStatuses("Downloading");
+        private static readonly DownloadStatuses _finished = new DownloadStatuses("Finished");
+        private static readonly DownloadStatuses _disconnected = new DownloadStatuses("Disconnected");
+        private static readonly DownloadStatuses _reconnecting = new DownloadStatuses("Reconnecting");
+        private static readonly DownloadStatuses _paused = new DownloadStatuses("Paused");
+        private static readonly DownloadStatuses _cancelled = new DownloadStatuses("Cancelled");
 
-        public override string ToString()
-        {
-            return Status;
-        }
-        public static implicit operator string(DownloadStatuses status) { return status.Status; }
+        public static DownloadStatuses Idle => _idle;
+        public static DownloadStatuses Connecting => _connecting;
+        public static DownloadStatuses Downloading => _downloading;
+        public static DownloadStatuses Finished => _finished;
+        public static DownloadStatuses Disconnected => _disconnected;
+        public static DownloadStatuses Reconnecting => _reconnecting;
+        public static DownloadStatuses Paused => _paused;
+        public static DownloadStatuses Cancelled => _cancelled;
+
+
+        public override string ToString() => Status;
+
+        public static implicit operator string(DownloadStatuses status) => status.Status;
     }
 }

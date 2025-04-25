@@ -19,7 +19,6 @@ namespace WFPUI.ViewModels
     public class DownloadViewModel : ObservableObject
     {
         private DownloadController _downloadController;
-        private ObservableCollection<DownloadThread> _threads;
 
         public DownloadViewModel()
         {
@@ -33,7 +32,6 @@ namespace WFPUI.ViewModels
                 _downloadController = new DownloadController(link, 10, fileManager, config, false);
                 _downloadController.PropertyChanged += DownloadController_PropertyChanged; // subscribe to changes
 
-                _threads = new ObservableCollection<DownloadThread>(_downloadController.ThreadList);
                 StartDownload();
             }
 
@@ -41,7 +39,6 @@ namespace WFPUI.ViewModels
             {
                 // Create mock data for design time
                 _downloadController = null;
-                _threads = new ObservableCollection<DownloadThread>();
             }
 
         }
@@ -49,7 +46,7 @@ namespace WFPUI.ViewModels
 
 
         public DownloadController ActiveDownload => _downloadController;
-        public ObservableCollection<DownloadThread> Thread => _threads;
+        public ObservableCollection<DownloadThread> ThreadList => _downloadController.ThreadList;
         public double TotalProgress => _downloadController.TotalProgress;
         public string URL => _downloadController.URL;
         public string Status => _downloadController.Status;
@@ -75,7 +72,7 @@ namespace WFPUI.ViewModels
         }
         private void StartDownload()
         {
-            _downloadController.PrintData();
+            _downloadController.StartDownloadAsync();
 
         }
 
@@ -101,7 +98,9 @@ namespace WFPUI.ViewModels
                 case nameof(DownloadController.ProgressPercentage):
                     OnPropertyChanged(nameof(ProgressPercentage));
                     break;
-
+                case nameof(DownloadController.ThreadList):
+                    OnPropertyChanged(nameof(ThreadList));
+                    break;
             }
 
 

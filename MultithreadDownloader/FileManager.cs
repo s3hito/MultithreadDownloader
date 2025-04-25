@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
 using System.Collections.Specialized;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 
 namespace MultithreadDownloader
 {
@@ -15,6 +18,8 @@ namespace MultithreadDownloader
         private string PathToTempFolder;
         private string PathtToMainFolder;
         private string PathToMainFile;
+        private string SavedDownloadsPath;
+        private string SavedDownloadsFolder= "SavedDownloads";
         private int FileCount;
         public Action RemoveDirectory;
         public Action CreateDirectory;
@@ -24,6 +29,7 @@ namespace MultithreadDownloader
             Filename = fname;
             PathToTempFolder = path + "\\" + fname + ".temp";
             PathToMainFile = path + "\\" + fname;
+            SavedDownloadsPath = Path.Combine(path, SavedDownloadsFolder);
 
             PathtToMainFolder = path;
             FileCount = filecount;
@@ -80,6 +86,18 @@ namespace MultithreadDownloader
             {
                 File.Delete(TempFile);
             }
+        }
+
+        public void CheckSavedDownloads()
+        {
+
+        }
+
+        public void SaveDownloadStateToFile(DownloadState state)
+        {
+            string stateFilePath = Path.Combine(SavedDownloadsPath, $"{Filename}.state.json");
+            string jsonState=JsonConvert.SerializeObject(state);
+            File.WriteAllText(stateFilePath, jsonState);
         }
 
         public KeyValueConfigurationCollection LoadConfiguration()

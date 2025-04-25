@@ -52,7 +52,7 @@ namespace WFPUI
         {
 
 
-            dnl.PrintData();
+            dnl.StartDownloadAsync();
             lvDownloadInfo.Items.Add(dnl);
         }
 

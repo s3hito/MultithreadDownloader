@@ -70,7 +70,8 @@
         <Button Grid.Row="5" Grid.Column="1" x:Name="btnPause" Content="Pause" HorizontalAlignment="Stretch" Command="{Binding PauseCommand}"/>
         <Button Grid.Row="5" Grid.Column="3" x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Stretch" Command="{Binding CancelCommand}"/>
 
-        <ListView Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="4" x:Name="lvThreadList" SizeChanged="lvThreadList_SizeChanged">
+        <ListView Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="4" x:Name="lvThreadList" SizeChanged="lvThreadList_SizeChanged"
+                  ItemsSource="{Binding ThreadList}">
             <ListView.View >
                 <GridView ColumnHeaderContainerStyle="{StaticResource ListViewAlignHeaderLeft}">
                     <GridViewColumn Header="№" DisplayMemberBinding="{Binding Path=SequenceNumber, UpdateSourceTrigger=PropertyChanged}"/>
