@@ -38,9 +38,10 @@ namespace MultithreadDownloader
         private double _downloadspeed;
         private ConsoleDrawer Drawer;
         private bool Locked=false;
-        private string DownloadBaseInfo;
         private bool DownloadFinished = false;
+        private long progressFromPaused;
         public int TestVal=50;
+
 
 
         
@@ -86,10 +87,7 @@ namespace MultithreadDownloader
             _tnumber = _tnum;
             Path = config["Path"].Value;
             ProxyList=fileman.FetchProxyFile();
-            ProxyDistributor = new ProxyManager(
-                (ProxyDistributionStates)Enum.Parse(typeof(ProxyDistributionStates), config["ProxyRule"].Value),
-                ProxyList,
-                (OutOfProxyBehaviourStates)Enum.Parse(typeof(OutOfProxyBehaviourStates), config["OutOfProxyRule"].Value));
+            ProxyDistributor = new ProxyManager(config,ProxyList);
 
 
             request = (HttpWebRequest)WebRequest.Create(URL);
@@ -103,28 +101,26 @@ namespace MultithreadDownloader
 
             FMan.CreateDirectory();
             PathToTempFolder = Path + "\\" + _filename + ".temp";
+            if (useconsole) Drawer = new ConsoleDrawer(this);
 
-            if (useconsole)
-            {
-                Drawer = new ConsoleDrawer(DownloadBaseInfo, this);
-
-            }
 
         }
 
-        public DownloadController(DownloadState downloadState, FileManager fileman, KeyValueConfigurationCollection config)
+        public DownloadController(DownloadState downloadState, FileManager fileman, KeyValueConfigurationCollection config, bool useconsole=true)
         {
             Path = config["Path"].Value;
-            ProxyList = fileman.FetchProxyFile();
-            ProxyDistributor = new ProxyManager(
-                (ProxyDistributionStates)Enum.Parse(typeof(ProxyDistributionStates), config["ProxyRule"].Value),
-                ProxyList,
-                (OutOfProxyBehaviourStates)Enum.Parse(typeof(OutOfProxyBehaviourStates), config["OutOfProxyRule"].Value));
+            FMan = fileman;
+            ProxyList = FMan.FetchProxyFile();
+
+            ProxyDistributor = new ProxyManager(config, ProxyList);
 
             CreateDownloadFromState(downloadState);
+            if (useconsole) Drawer = new ConsoleDrawer(this);
+            FMan.SetValues(_filename, Path, _tnumber);
+
         }
 
-       
+
 
         public async Task StartDownloadAsync()
         {
@@ -156,55 +152,48 @@ namespace MultithreadDownloader
             }
 
             await ServicesLauncher();
-            Status = DownloadStatuses.Finished;
         }
 
         public async Task ServicesLauncher()
         {
             Task.Run(UpdateProgress);
-            if (Drawer != null)
-            {
-                Task.Run(Drawer.Start);
 
-            }
+            if (Drawer != null) Task.Run(Drawer.Start);
+
             Task.Run(DownloadWatcher);
             await Task.Run(TaskWatcher);
 
 
-            DownloadFinished = true;
             
-            if(Drawer != null)
-            {
-                Drawer.Stop();
+            if(Drawer != null) Drawer.Stop();
 
+            if (Status != DownloadStatuses.Paused) //Check if download is paused so that the fman doesn't delete the temp files
+            {
+                FMan.CombineTempFiles();
+                FMan.RemoveDirectory();
+                Status = DownloadStatuses.Finished;
             }
-            FMan.CombineTempFiles();
-            FMan.RemoveDirectory();
+
         }
 
         public async Task TaskWatcher()
         {
             bool flag=false;
-            while (!DownloadFinished)
+            while (Status!=DownloadStatuses.Finished && Status!=DownloadStatuses.Paused)
             {
 
                 foreach (DownloadThread download in ThreadList)
                 {
-
-                    if (download.Status==DownloadStatuses.Finished.Status)
-                    {
-                        flag = true;
-                    }
+                    if (download.Status==DownloadStatuses.Finished.Status) flag = true;
                     else
                     {
                         flag=false;
                         break;
                     }
                 }
-                if (flag)
-                {
-                    break;
-                }
+
+                if (flag) Status=DownloadStatuses.Finished; // if looped through all threads and their status is "Finished", set the status of the entire download to "Finished"
+                
                 Thread.Sleep(100);
             }
 
@@ -216,7 +205,7 @@ namespace MultithreadDownloader
             DownloadThread _newThread; 
             OldThreadList = ThreadList.Select(x=>x.Copy()).ToList();
             Thread.Sleep(TimeOutMs);
-            while (!DownloadFinished)
+            while (Status!=DownloadStatuses.Finished && Status!=DownloadStatuses.Paused)
             {
                 for (int i=0;i<_tnumber;i++)
                 {
@@ -260,11 +249,16 @@ namespace MultithreadDownloader
                 }
             }
             CaptureDownloadState();
+
+
+
         }
 
         public void Continue()
         {
             Status = DownloadStatuses.Downloading;
+            StartAllThreadsAsync();
+
         }
 
         public void Cancel()
@@ -283,18 +277,19 @@ namespace MultithreadDownloader
             DownloadState state = new DownloadState
             {
                 URL = _url,
-                Filname=_filename,
-                TotalSize=BytesLength,
-                PathToTempFolder=PathToTempFolder,
-                ThreadNumber=_tnumber,
-                ThreadStates=ThreadList.Select(t=>new ThreadState
+                Filname = _filename,
+                TotalSize = BytesLength,
+                PathToTempFolder = PathToTempFolder,
+                ThreadNumber = _tnumber,
+                ChucnkSize = _sectionlenth,
+                ThreadStates = ThreadList.Select(t => new ThreadState
                 {
-                    Start=t.Start,
-                    End=t.End,
-                    ProgressAbsolute=t.ProgressAbsolute,
-                    Accumulated=t.Accumulated,
-                    Filename=t.Filename
-                    
+                    Start = t.Start,
+                    End = t.End,
+                    ProgressAbsolute = t.ProgressAbsolute,
+                    Accumulated = t.Accumulated,
+                    Filename = t.Filename
+
                 }).ToList()
             };
 
@@ -303,10 +298,10 @@ namespace MultithreadDownloader
 
         private async Task UpdateProgress()
         {
-            while (!DownloadFinished)
+            while (Status != DownloadStatuses.Finished || Status!= DownloadStatuses.Paused)
             {
                 TotalProgress = 0;
-                
+                TotalProgress+=progressFromPaused;
                 foreach (DownloadThread download in ThreadList)
                 {
                     TotalProgress += download.Accumulated;
@@ -333,7 +328,7 @@ namespace MultithreadDownloader
             PathToTempFolder = state.PathToTempFolder;
             _tnumber=state.ThreadNumber;
             _byteslength=state.TotalSize;
-
+            _sectionlenth = state.ChucnkSize;
             _threadlist= new ObservableCollection<DownloadThread>();
             tasks = new List<Task>();
 
@@ -347,6 +342,7 @@ namespace MultithreadDownloader
                     PathToTempFolder, ProxyDistributor);
 
                 ThreadList.Add(_newThread);//Adds a newly created thread to a thread list
+                progressFromPaused+=threadState.Accumulated;//we add accumulated length from previous processes for better progress displaying in the UpdateProgress()
 
             }
 

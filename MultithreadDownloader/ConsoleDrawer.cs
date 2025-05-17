@@ -21,7 +21,7 @@ namespace MultithreadDownloader
         private List<DownloadThread> DownloadList;  
 
         
-        public ConsoleDrawer(string prefixstring, DownloadController contref, int delayms=10) 
+        public ConsoleDrawer(DownloadController contref, int delayms=10) 
         {
            
 
@@ -37,6 +37,7 @@ namespace MultithreadDownloader
 
         public async Task Start()
         {
+            ClearAllScreen();
             Switch = true;
             Print();
         }
@@ -53,8 +54,6 @@ namespace MultithreadDownloader
                 Thread.Sleep(DelayMs);
             }
             Console.WriteLine("Done");
-
-
         }
         private void Update()
         {
@@ -111,6 +110,10 @@ namespace MultithreadDownloader
             int CurrentLineCursor = Console.CursorTop;
             Console.Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(0, CurrentLineCursor);
+        }
+        private void ClearAllScreen()
+        {
+            Console.Clear();
         }
     }
 }

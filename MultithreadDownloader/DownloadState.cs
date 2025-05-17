@@ -15,6 +15,7 @@ namespace MultithreadDownloader
         public List<ThreadState> ThreadStates { get; set; }
         public string PathToTempFolder;
         public long TotalSize { get; set; }
+        public long ChucnkSize {  get; set; }
     }
 
 }

@@ -88,10 +88,7 @@ namespace MultithreadDownloader
             }
         }
 
-        public void CheckSavedDownloads()
-        {
 
-        }
 
         public void SaveDownloadStateToFile(DownloadState state)
         {

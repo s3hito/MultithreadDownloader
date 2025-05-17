@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection.Emit;
@@ -33,11 +34,11 @@ namespace MultithreadDownloader
         }
         private ProxyDistributionStates DistributorBehaviour;
         private OutOfProxyBehaviourStates OutOfProxyBehaviour;
-        public ProxyManager(ProxyDistributionStates distrules =0, List<string> addresses = null, OutOfProxyBehaviourStates outofproxy =0)
+        public ProxyManager(KeyValueConfigurationCollection config, List<string> addresses = null)
         {
             Addresses=addresses;
-            DistributorBehaviour = distrules;
-            OutOfProxyBehaviour = outofproxy;
+            DistributorBehaviour = (ProxyDistributionStates)Enum.Parse(typeof(ProxyDistributionStates), config["ProxyRule"].Value);
+            OutOfProxyBehaviour = (OutOfProxyBehaviourStates)Enum.Parse(typeof(OutOfProxyBehaviourStates), config["OutOfProxyRule"].Value);
         }
 
 
