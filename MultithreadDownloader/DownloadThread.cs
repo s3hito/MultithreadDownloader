@@ -82,6 +82,8 @@ namespace MultithreadDownloader
                                                                                           //and if it's a new thread for reconnection it opens a file
         }
 
+
+
         public DownloadThread Copy() 
         {
             return (DownloadThread)this.MemberwiseClone();
@@ -181,5 +183,6 @@ namespace MultithreadDownloader
             ReconnectCount++;
             
         }
+
     }
 }

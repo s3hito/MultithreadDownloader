@@ -28,7 +28,7 @@ namespace MultithreadDownloader
         private HttpWebRequest request;
         private WebResponse responce;
         private int _tnumber;
-        private int _timeoutms=3000;
+        private int _timeoutms=300000;
         private DownloadStatuses _status;
         private long _byteslength; 
         private long _sectionlenth;
@@ -36,7 +36,6 @@ namespace MultithreadDownloader
         private long _totalprogress;
         private double _progresspercent;
         private double _downloadspeed;
-        private ConsoleDrawer Drawer;
         private bool Locked=false;
         private bool DownloadFinished = false;
         private long progressFromPaused;
@@ -101,7 +100,6 @@ namespace MultithreadDownloader
 
             FMan.CreateDirectory();
             PathToTempFolder = Path + "\\" + _filename + ".temp";
-            if (useconsole) Drawer = new ConsoleDrawer(this);
 
 
         }
@@ -115,7 +113,6 @@ namespace MultithreadDownloader
             ProxyDistributor = new ProxyManager(config, ProxyList);
 
             CreateDownloadFromState(downloadState);
-            if (useconsole) Drawer = new ConsoleDrawer(this);
             FMan.SetValues(_filename, Path, _tnumber);
 
         }
@@ -158,21 +155,20 @@ namespace MultithreadDownloader
         {
             Task.Run(UpdateProgress);
 
-            if (Drawer != null) Task.Run(Drawer.Start);
 
             Task.Run(DownloadWatcher);
             await Task.Run(TaskWatcher);
 
 
-            
-            if(Drawer != null) Drawer.Stop();
-
+         
             if (Status != DownloadStatuses.Paused) //Check if download is paused so that the fman doesn't delete the temp files
             {
                 FMan.CombineTempFiles();
                 FMan.RemoveDirectory();
                 Status = DownloadStatuses.Finished;
             }
+            CaptureDownloadState();
+            RemoveAllThreads();
 
         }
 
@@ -235,7 +231,10 @@ namespace MultithreadDownloader
             }
         }
 
-        
+        private void RemoveAllThreads()
+        {
+            _threadlist = new ObservableCollection<DownloadThread>();
+        }
 
         public void Pause()
         {
@@ -257,6 +256,7 @@ namespace MultithreadDownloader
         public void Continue()
         {
             Status = DownloadStatuses.Downloading;
+            if (ThreadList.Count==0) SplitIntoSections(); //if threads are not already created, create them
             StartAllThreadsAsync();
 
         }
@@ -282,6 +282,7 @@ namespace MultithreadDownloader
                 PathToTempFolder = PathToTempFolder,
                 ThreadNumber = _tnumber,
                 ChucnkSize = _sectionlenth,
+                TotalProgress = _totalprogress,
                 ThreadStates = ThreadList.Select(t => new ThreadState
                 {
                     Start = t.Start,
@@ -298,8 +299,9 @@ namespace MultithreadDownloader
 
         private async Task UpdateProgress()
         {
-            while (Status != DownloadStatuses.Finished || Status!= DownloadStatuses.Paused)
+            while (Status != DownloadStatuses.Finished && Status!= DownloadStatuses.Paused)
             {
+                Thread.Sleep(10);
                 TotalProgress = 0;
                 TotalProgress+=progressFromPaused;
                 foreach (DownloadThread download in ThreadList)
@@ -307,7 +309,6 @@ namespace MultithreadDownloader
                     TotalProgress += download.Accumulated;
                 }
                 ProgressPercentage = (((double)TotalProgress / (double)BytesLength) * 100);
-                Thread.Sleep(10);
             }
            
         }
@@ -331,6 +332,7 @@ namespace MultithreadDownloader
             _sectionlenth = state.ChucnkSize;
             _threadlist= new ObservableCollection<DownloadThread>();
             tasks = new List<Task>();
+            progressFromPaused = state.TotalProgress;
 
             for (int i = 0; i < _tnumber; i++)
             {
@@ -342,10 +344,12 @@ namespace MultithreadDownloader
                     PathToTempFolder, ProxyDistributor);
 
                 ThreadList.Add(_newThread);//Adds a newly created thread to a thread list
-                progressFromPaused+=threadState.Accumulated;//we add accumulated length from previous processes for better progress displaying in the UpdateProgress()
+                //progressFromPaused+=threadState.Accumulated;//we add accumulated length from previous processes for better progress displaying in the UpdateProgress()
 
             }
 
+            //TotalProgress += progressFromPaused;
+            ProgressPercentage = (((double)TotalProgress / (double)_byteslength) * 100);// this line is for displaying in the downloadsmanager before the download is continued
 
         }
 
