@@ -21,7 +21,7 @@ namespace MultithreadDownloader
         public string ThreadName;
         public long ProgressAbsolute;
         public float ProgressRelative;
-        public bool CanClearLine;
+        public bool canClearLine;
         public long Size;
         public string Proxy;
         private ProxyManager ProxyDistRef;
@@ -54,7 +54,7 @@ namespace MultithreadDownloader
             Filename = filename;
             Status = DownloadStatuses.Idle;
             ProxyDistRef= proxman;
-            CanClearLine = false;
+            canClearLine = false;
             Accumulated = acum;
             ReconnectCount= reccount;
             MaxReconnect = maxrec;
@@ -102,21 +102,15 @@ namespace MultithreadDownloader
             ThreadRequest.AddRange(Start, End);
             Status = DownloadStatuses.Connecting;
             ThreadResponse = await ThreadRequest.GetResponseAsync();
-            if (Suspended)
-            {
-                CloseAllStreams();
-                return;
-            }
+            if (Suspended) return;
+
             Status = DownloadStatuses.Downloading;
           
 
             ThreadRespStream = ThreadResponse.GetResponseStream();
 
-            if (Suspended)
-            {
-                CloseAllStreams();
-                return;
-            }
+            if (Suspended) return;
+
 
             byte[] buffer = new byte[1024];
             int bytesRead = 0;
@@ -124,11 +118,8 @@ namespace MultithreadDownloader
             {
 
                 bytesRead = await ThreadRespStream.ReadAsync(buffer, 0, buffer.Length);
-                if (Suspended)
-                {
-                    CloseAllStreams();
-                    return;
-                }
+                if (Suspended) return;
+
                 
                 if (ProgressAbsolute + bytesRead - 1 > End)//Check for overdownload
                 {
@@ -150,8 +141,9 @@ namespace MultithreadDownloader
                                    //Add this later && ProgressAbsolute < End
 
             fs.Close();
+            fs = null;
             Status=DownloadStatuses.Finished;
-            CanClearLine = true;
+            canClearLine = true;
             
            
         }
@@ -164,24 +156,31 @@ namespace MultithreadDownloader
 
             return res;
         }
-        
-        public void CloseAllStreams()//never executes with fs.CanWrite
+
+        public void CloseAllStreams()
         {
-            if (ThreadRespStream != null) ThreadRespStream.Close();
+            try
+            {
+                if (ThreadRespStream != null) { ThreadRespStream.Close(); ThreadRespStream = null; }
 
-            if (ThreadResponse != null) ThreadResponse.Close();
+                if (ThreadResponse != null) { ThreadResponse.Close(); ThreadResponse = null; }
+                if (fs != null)
+                {
+                    Status = DownloadStatuses.Disconnected;
+                    fs.Flush();
+                    fs.Close();
+                    fs = null;
+                    ReconnectCount++;
+                }
+             
 
-        }
-
-        
-        public void CloseFileStream()
-        {
-            Status= DownloadStatuses.Disconnected ;
-            fs.Flush();
-            fs.Close();
-            fs = null;
-            ReconnectCount++;
+            }
             
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw new Exception($"thread terminated with exception: {ex.Message}");
+            }
         }
 
     }

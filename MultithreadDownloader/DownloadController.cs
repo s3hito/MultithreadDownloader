@@ -28,7 +28,7 @@ namespace MultithreadDownloader
         private HttpWebRequest request;
         private WebResponse responce;
         private int _tnumber;
-        private int _timeoutms=300000;
+        private int _timeoutms=3000;
         private DownloadStatuses _status;
         private long _byteslength; 
         private long _sectionlenth;
@@ -38,7 +38,9 @@ namespace MultithreadDownloader
         private double _downloadspeed;
         private bool Locked=false;
         private bool DownloadFinished = false;
+        public bool canClearLine=false;
         private long progressFromPaused;
+
         public int TestVal=50;
 
 
@@ -161,21 +163,22 @@ namespace MultithreadDownloader
 
 
          
-            if (Status != DownloadStatuses.Paused) //Check if download is paused so that the fman doesn't delete the temp files
+            if (Status != DownloadStatuses.Paused && Status != DownloadStatuses.Cancelled) //Check if download is paused so that the fman doesn't delete the temp files
             {
+                CaptureDownloadState();
+                CloseAllThreads();
                 FMan.CombineTempFiles();
                 FMan.RemoveDirectory();
                 Status = DownloadStatuses.Finished;
             }
-            CaptureDownloadState();
-            RemoveAllThreads();
+            canClearLine=true;
 
         }
 
         public async Task TaskWatcher()
         {
             bool flag=false;
-            while (Status!=DownloadStatuses.Finished && Status!=DownloadStatuses.Paused)
+            while (Status==DownloadStatuses.Downloading)
             {
 
                 foreach (DownloadThread download in ThreadList)
@@ -201,7 +204,7 @@ namespace MultithreadDownloader
             DownloadThread _newThread; 
             OldThreadList = ThreadList.Select(x=>x.Copy()).ToList();
             Thread.Sleep(TimeOutMs);
-            while (Status!=DownloadStatuses.Finished && Status!=DownloadStatuses.Paused)
+            while (Status==DownloadStatuses.Downloading)
             {
                 for (int i=0;i<_tnumber;i++)
                 {
@@ -210,7 +213,7 @@ namespace MultithreadDownloader
                         if (ThreadList[i].Suspended != true)//check if the thread was already closed by pause button
                         {
                             ThreadList[i].Suspended = true;
-                            ThreadList[i].CloseFileStream();
+                            ThreadList[i].CloseAllStreams();
                         }
                         _newThread = new DownloadThread(
                             URL,
@@ -221,7 +224,7 @@ namespace MultithreadDownloader
                             ThreadList[i].Accumulated,
                             ThreadList[i].ReconnectCount);
                         ThreadList[i] = _newThread;
-                        ThreadList[i].CanClearLine = true;
+                        ThreadList[i].canClearLine = true;
                         tasks[i] = ThreadList[i].StartThreadAsync();
 
                     }
@@ -239,24 +242,15 @@ namespace MultithreadDownloader
         public void Pause()
         {
             Status = DownloadStatuses.Paused;
-            for (int i = 0; i< _tnumber; i++)
-            {
-                if (ThreadList[i].Status != DownloadStatuses.Finished)
-                {
-                    ThreadList[i].Suspended = true;
-                    ThreadList[i].CloseFileStream();
-                }
-            }
+            CloseAllThreads();
             CaptureDownloadState();
-
-
-
         }
 
         public void Continue()
         {
             Status = DownloadStatuses.Downloading;
             if (ThreadList.Count==0) SplitIntoSections(); //if threads are not already created, create them
+            canClearLine = true;
             StartAllThreadsAsync();
 
         }
@@ -264,12 +258,11 @@ namespace MultithreadDownloader
         public void Cancel()
         {
             Status = DownloadStatuses.Cancelled;
-            for (int i = 0; i < _tnumber; i++)
-            {
-                ThreadList[i].Suspended = true;
-                ThreadList[i].CloseFileStream();
-            }
-            FMan.DeleteTempFiles();
+            CloseAllThreads();
+            FMan.RemoveDirectory();
+            canClearLine= true;
+            RemoveAllThreads();
+
         }
 
         private void CaptureDownloadState()
@@ -299,7 +292,7 @@ namespace MultithreadDownloader
 
         private async Task UpdateProgress()
         {
-            while (Status != DownloadStatuses.Finished && Status!= DownloadStatuses.Paused)
+            while (Status == DownloadStatuses.Downloading)
             {
                 Thread.Sleep(10);
                 TotalProgress = 0;
@@ -312,6 +305,26 @@ namespace MultithreadDownloader
             }
            
         }
+
+        private void CloseAllThreads()
+        {
+            try
+            {
+                for (int i = 0; i < _tnumber; i++)
+                {
+
+                    ThreadList[i].Suspended = true;
+                    ThreadList[i].CloseAllStreams();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception so you can see what's happening
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw new Exception($"Thread terminated with exception: {ex.Message}");
+            }
+        }
         private void TryGetName()
         {
             if (responce.Headers["Content-Disposition"] == null)
@@ -323,33 +336,43 @@ namespace MultithreadDownloader
 
         public void CreateDownloadFromState(DownloadState state)
         {
-            DownloadThread _newThread;
-            _url = state.URL;
-            Filename=state.Filname;
-            PathToTempFolder = state.PathToTempFolder;
-            _tnumber=state.ThreadNumber;
-            _byteslength=state.TotalSize;
-            _sectionlenth = state.ChucnkSize;
-            _threadlist= new ObservableCollection<DownloadThread>();
-            tasks = new List<Task>();
-            progressFromPaused = state.TotalProgress;
-
-            for (int i = 0; i < _tnumber; i++)
+            try
             {
-                ThreadState threadState = state.ThreadStates[i];
-                _newThread = new DownloadThread(
-                    _url,
-                    threadState.ProgressAbsolute,
-                    threadState.End, threadState.Filename,
-                    PathToTempFolder, ProxyDistributor);
+                DownloadThread _newThread;
+                _url = state.URL;
+                Filename = state.Filname;
+                PathToTempFolder = state.PathToTempFolder;
+                _tnumber = state.ThreadNumber;
+                _byteslength = state.TotalSize;
+                _sectionlenth = state.ChucnkSize;
+                _threadlist = new ObservableCollection<DownloadThread>();
+                tasks = new List<Task>();
+                progressFromPaused = state.TotalProgress;
 
-                ThreadList.Add(_newThread);//Adds a newly created thread to a thread list
-                //progressFromPaused+=threadState.Accumulated;//we add accumulated length from previous processes for better progress displaying in the UpdateProgress()
+                for (int i = 0; i < _tnumber; i++)
+                {
+                    ThreadState threadState = state.ThreadStates[i];
+                    _newThread = new DownloadThread(
+                        _url,
+                        threadState.ProgressAbsolute,
+                        threadState.End, threadState.Filename,
+                        PathToTempFolder, ProxyDistributor);
+                    if ((threadState.End - threadState.Start) == threadState.Accumulated - 1) _newThread.Status = DownloadStatuses.Finished;
+                    ThreadList.Add(_newThread);//Adds a newly created thread to a thread list
+                                               //progressFromPaused+=threadState.Accumulated;//we add accumulated length from previous processes for better progress displaying in the UpdateProgress()
+
+                }
+
+                //TotalProgress += progressFromPaused;
+                ProgressPercentage = (((double)TotalProgress / (double)_byteslength) * 100);// this line is for displaying in the downloadsmanager before the download is continued
 
             }
 
-            //TotalProgress += progressFromPaused;
-            ProgressPercentage = (((double)TotalProgress / (double)_byteslength) * 100);// this line is for displaying in the downloadsmanager before the download is continued
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw new Exception($"Thread terminated with exception: {ex.Message}");
+            }
 
         }
 
@@ -378,9 +401,5 @@ namespace MultithreadDownloader
                 adjustedSize,
                 SizeSuffixes[mag]);
         }
-
-
-         
-
     }
 }

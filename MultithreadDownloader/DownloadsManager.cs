@@ -72,19 +72,29 @@ namespace MultithreadDownloader
                 downloadsStates.Add(state);
             }
 
-            DeleteCompletedDownloads();
-
             return downloadsStates;
         }
 
-        private void DeleteCompletedDownloads()
+        public void DeleteDownload(int controllerIdx)
         {
+            downloadControllers[controllerIdx].Cancel();
+            DeleteStateFile(downloadControllers[controllerIdx]);
+            downloadControllers.RemoveAt(controllerIdx);
 
-            foreach (DownloadState downloadState in downloadsStates)
+        }
+
+        public void DeleteStateFile(DownloadController controller)
+        {
+            string[] stateFiles = Directory.GetFiles(SavedDownloadsFolder, "*.state.json");
+
+
+            foreach (string stateFile in stateFiles)
             {
-                if (downloadState.TotalSize == downloadState.TotalProgress)//check if total expected file size is equal to all downloaded parts
+                string jsonState = File.ReadAllText(stateFile);
+                DownloadState state = JsonConvert.DeserializeObject<DownloadState>(jsonState);
+                if (state.Filname == controller.Filename)
                 {
-                    //delete the file
+                    File.Delete(Path.Combine(Directory.GetCurrentDirectory(), stateFile));
                 }
             }
         }

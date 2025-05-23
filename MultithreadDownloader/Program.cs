@@ -30,7 +30,7 @@ namespace MultithreadDownloader
             List<DownloadState> downloads = dMan.LoadSavedDownloads();
             DownloadManagerDrawer dmanDrawer = new DownloadManagerDrawer(dMan);
             dMan.AddDownloadFromLink(link, 2, FMan, Config);
-            dmanDrawer.StartDrawer();
+            await dmanDrawer.StartDrawer();
 
             foreach (DownloadState download in downloads)
             {

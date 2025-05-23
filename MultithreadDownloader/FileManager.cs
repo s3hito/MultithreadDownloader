@@ -58,25 +58,33 @@ namespace MultithreadDownloader
 
         public void CombineTempFiles()
         {
-
-            using (FileStream OutFile = new FileStream(PathToMainFile, FileMode.Create, FileAccess.Write))
+            try
             {
-                for (int i = 0; i < FileCount; i++)
+                using (FileStream OutFile = new FileStream(PathToMainFile, FileMode.Create, FileAccess.Write))
                 {
-                    int bytesread = 0;
-                    byte[] buffer = new byte[1024];
-                    using (FileStream InputFile = new FileStream($"{PathToTempFolder}\\{Filename}.temp{i}", FileMode.Open, FileAccess.Read))
+                    for (int i = 0; i < FileCount; i++)
                     {
-                        do
+                        int bytesread = 0;
+                        byte[] buffer = new byte[1024];
+                        using (FileStream InputFile = new FileStream($"{PathToTempFolder}\\{Filename}.temp{i}", FileMode.Open, FileAccess.Read))
                         {
-                            bytesread = InputFile.Read(buffer, 0, buffer.Length);
-                            OutFile.Write(buffer, 0, bytesread);
+                            do
+                            {
+                                bytesread = InputFile.Read(buffer, 0, buffer.Length);
+                                OutFile.Write(buffer, 0, bytesread);
+                            }
+                            while (bytesread > 0);
                         }
-                        while (bytesread > 0);
-                    }
 
+                    }
                 }
             }
+
+            catch (Exception ex)
+            {
+                throw new Exception("Exception: ", ex);
+            }
+            
         }
 
         public void DeleteTempFiles()
@@ -92,9 +100,18 @@ namespace MultithreadDownloader
 
         public void SaveDownloadStateToFile(DownloadState state)
         {
-            string stateFilePath = Path.Combine(SavedDownloadsPath, $"{Filename}.state.json");
-            string jsonState=JsonConvert.SerializeObject(state);
-            File.WriteAllText(stateFilePath, jsonState);
+            try
+            {
+                string stateFilePath = Path.Combine(SavedDownloadsPath, $"{Filename}.state.json");
+                string jsonState = JsonConvert.SerializeObject(state);
+                File.WriteAllText(stateFilePath, jsonState);
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw new Exception($"Thread terminated with exception: {ex.Message}");
+            }
         }
 
         public KeyValueConfigurationCollection LoadConfiguration()
