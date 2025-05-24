@@ -33,15 +33,15 @@ namespace WFPUI
 
         public MainWindow()
         {
- 
 
+            /*
             FileManager FMan = new FileManager();
             string link = "https://www.spiggle-theis.com/images/videos/BET_.mp4";
             KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
             dnl = new DownloadController(link, 10, FMan, Config, false);
-
-            InitializeComponent();
             AddDownload();
+            */
+            InitializeComponent();
             
 
         }

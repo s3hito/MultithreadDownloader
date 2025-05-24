@@ -31,15 +31,6 @@ namespace MultithreadDownloader
             DownloadManagerDrawer dmanDrawer = new DownloadManagerDrawer(dMan);
             dMan.AddDownloadFromLink(link, 2, FMan, Config);
             await dmanDrawer.StartDrawer();
-
-            foreach (DownloadState download in downloads)
-            {
-                DownloadController controller = new DownloadController(download, FMan, Config);
-                dMan.AddDownloadController(controller);
-                //controller.Continue();
-                Console.ReadLine();
-
-            }
             
 
         }

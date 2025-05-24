@@ -1,29 +1,31 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MultithreadDownloader
 {
-    public class DownloadsManager
+    public class DownloadsManager : ObservableObject
     {
         private string SavedDownloadsPath;
         private string SavedDownloadsFolder = "SavedDownloads";
 
         private DownloadState downloadState;
         private List<DownloadState> downloadsStates;
-        public List<DownloadController> downloadControllers;
+        public ObservableCollection<DownloadController> downloadControllers;
         DownloadManagerDrawer ManagerDrawer;
         
-        public DownloadsManager() 
+        public DownloadsManager(bool useConsole=false) 
         {
             SavedDownloadsPath = Path.Combine(Directory.GetCurrentDirectory(), SavedDownloadsFolder);
             if (!Directory.Exists(SavedDownloadsFolder)) Directory.CreateDirectory(SavedDownloadsPath);
-            ManagerDrawer = new DownloadManagerDrawer(this);
-            downloadControllers = new List<DownloadController>();
+            if (useConsole) ManagerDrawer = new DownloadManagerDrawer(this);
+            downloadControllers = new ObservableCollection<DownloadController>();
         }
 
         public void AddDownloadFromLink(string link, int tnum, FileManager fman, KeyValueConfigurationCollection config)
@@ -31,8 +33,6 @@ namespace MultithreadDownloader
             DownloadController controller = new DownloadController(link, tnum, fman, config);
             AddDownloadController(controller);
         }
-
-
 
         public void ToggleDownload(DownloadController controller)
         {
@@ -49,6 +49,25 @@ namespace MultithreadDownloader
         public void AddDownloadController(DownloadController controller)
         {
             downloadControllers.Add(controller);
+        }
+
+        private void CreateDownloadFromState(DownloadState state)
+        {
+            FileManager FMan = new FileManager();
+
+            KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
+
+            DownloadController controller = new DownloadController(state, FMan , Config);
+            AddDownloadController(controller);
+
+        }
+
+        public void CreateDownloadsFromStates()
+        {
+            foreach (DownloadState state in downloadsStates)
+            {
+                CreateDownloadFromState(state);
+            }
         }
 
         private DownloadState GetNeededDownload(DownloadController controller)
@@ -81,6 +100,13 @@ namespace MultithreadDownloader
             DeleteStateFile(downloadControllers[controllerIdx]);
             downloadControllers.RemoveAt(controllerIdx);
 
+        }
+
+        public void DeleteDownload(DownloadController controller)
+        {
+            controller.Cancel();
+            DeleteStateFile(controller);
+            downloadControllers.Remove(controller);
         }
 
         public void DeleteStateFile(DownloadController controller)

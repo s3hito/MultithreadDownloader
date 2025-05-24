@@ -19,20 +19,14 @@ namespace WFPUI.ViewModels
     public class DownloadViewModel : ObservableObject
     {
         private DownloadController _downloadController;
+        private DownloadsManager downloadsManager;
 
         public DownloadViewModel()
         {
             if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
             {
                 // Only execute this code at runtime, not design time
-                FileManager fileManager = new FileManager();
-                string link = "https://www.spiggle-theis.com/images/videos/BET_.mp4";
 
-                KeyValueConfigurationCollection config = fileManager.LoadConfiguration();
-                _downloadController = new DownloadController(link, 10, fileManager, config, false);
-                _downloadController.PropertyChanged += DownloadController_PropertyChanged; // subscribe to changes
-
-                StartDownload();
             }
 
             else
@@ -43,16 +37,23 @@ namespace WFPUI.ViewModels
 
         }
 
+        public DownloadViewModel(DownloadController controller)
+        {
+            _downloadController = controller;
+            _downloadController.PropertyChanged += DownloadController_PropertyChanged;
+
+        }
+
 
 
         public DownloadController ActiveDownload => _downloadController;
-        public ObservableCollection<DownloadThread> ThreadList => _downloadController.ThreadList;
-        public double TotalProgress => _downloadController.TotalProgress;
-        public string URL => _downloadController.URL;
-        public string Status => _downloadController.Status;
-        public string Size => _downloadController.Size;
-        public long SectionLength => _downloadController.SectionLength;
-        public double ProgressPercentage => _downloadController.ProgressPercentage;
+        public ObservableCollection<DownloadThread> ThreadList => _downloadController?.ThreadList;
+        public double TotalProgress => _downloadController?.TotalProgress ?? 0;
+        public string URL => _downloadController?.URL ?? string.Empty;
+        public string Status => _downloadController?.Status ?? "Unknown";
+        public string Size => _downloadController?.Size ?? "0 B";
+        public long SectionLength => _downloadController?.SectionLength ?? 0;
+        public double ProgressPercentage => _downloadController?.ProgressPercentage ?? 0;
 
 
 
@@ -63,7 +64,9 @@ namespace WFPUI.ViewModels
 
         private void PauseDownload()
         {
-            _downloadController.Pause();
+
+
+
         }
 
         private void CancelDownload()
@@ -104,6 +107,11 @@ namespace WFPUI.ViewModels
             }
 
 
+        }
+
+        public void Dispose()
+        {
+            _downloadController.PropertyChanged-=DownloadController_PropertyChanged;
         }
     }
 }

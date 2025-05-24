@@ -78,7 +78,7 @@ namespace MultithreadDownloader
 
 
 
-        public DownloadController( string url, int _tnum, FileManager fileman, KeyValueConfigurationCollection config, bool useconsole=true)
+        public DownloadController( string url, int _tnum, FileManager fileman, KeyValueConfigurationCollection config)
         {
    
             
@@ -106,7 +106,7 @@ namespace MultithreadDownloader
 
         }
 
-        public DownloadController(DownloadState downloadState, FileManager fileman, KeyValueConfigurationCollection config, bool useconsole=true)
+        public DownloadController(DownloadState downloadState, FileManager fileman, KeyValueConfigurationCollection config)
         {
             Path = config["Path"].Value;
             FMan = fileman;

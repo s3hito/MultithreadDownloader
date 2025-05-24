@@ -4,47 +4,70 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WFPUI"
+        xmlns:viewmodels="clr-namespace:WFPUI.ViewModels"
+        xmlns:bh="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="700">
+    <Window.DataContext>
+        <viewmodels:MainWindowViewModel/>
+    </Window.DataContext>
 
-    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
-
-
-
         </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="5"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="25"/>
+                <ColumnDefinition Width="25"/>
+                <ColumnDefinition Width="25"/>
+                <ColumnDefinition Width="25"/>
+                <ColumnDefinition Width="25"/>
+                <ColumnDefinition Width="25"/>
+            </Grid.ColumnDefinitions>
+       
         
         <Button x:Name="btnAdd"  
-            Grid.Row="0" 
-            Width="16" 
-            Height="16" 
-            HorizontalAlignment="Left" 
+            Grid.Row="0" Grid.Column="0" Width="16" Height="16" HorizontalAlignment="Left"  Background="White" BorderBrush="White" Padding="0"
             Style="{StaticResource DefaultbtnOverride}"
             Content="{StaticResource AddImage}" 
-            Margin="5" 
-            Background="White"
-            BorderBrush="White" 
-            Padding="0" Click="btnAdd_Click" MouseEnter="btnAdd_MouseEnter" MouseLeave="btnAdd_MouseLeave" />
+            Click="btnAdd_Click" MouseEnter="btnAdd_MouseEnter" MouseLeave="btnAdd_MouseLeave" />
 
-        <ListView Grid.Row="1" Margin="5" x:Name="lvDownloadInfo" SizeChanged="lvDownloadInfo_SizeChanged" ItemContainerStyle="{StaticResource itemstyle}">
+            <Button x:Name="btnToggle" Grid.Row="1" Grid.Column="1" Content="continue" Command="{Binding ToggleCommand}"/>
+            <Button x:Name="btnDelete" Grid.Row="1" Grid.Column="2" Content="Del" Command="{Binding CancelCommand}"/>
+        </Grid>
+        <ListView Grid.Row="1" Grid.Column="1" x:Name="lvDownloadInfo" SizeChanged="lvDownloadInfo_SizeChanged" Grid.ColumnSpan="4"
+                  ItemContainerStyle="{StaticResource itemstyle}" ItemsSource="{Binding DownloadsList}" SelectedItem="{Binding SelectedController}">
+            <bh:Interaction.Triggers>
+                <bh:EventTrigger EventName="MouseDoubleClick">
+                    <bh:InvokeCommandAction Command="{Binding DoubleClickCommand}" 
+                                 CommandParameter="{Binding SelectedController}"/>
+                </bh:EventTrigger>
+            </bh:Interaction.Triggers>
+
+
             <ListView.View>
                 <GridView AllowsColumnReorder="True" ColumnHeaderToolTip="Download info" >
-                    <GridViewColumn DisplayMemberBinding="{Binding Path=Filename, UpdateSourceTrigger=PropertyChanged}"  Header="File name" Width="auto" />
-                    <GridViewColumn DisplayMemberBinding="{Binding Path=Size, UpdateSourceTrigger=PropertyChanged}" Header="Size" Width="auto"/>
-                    <GridViewColumn Header="Progress" x:Name="pgbColumn" >
-                        <GridViewColumn.CellTemplate >
-                            <DataTemplate >
+                    <GridViewColumn DisplayMemberBinding="{Binding Filename, UpdateSourceTrigger=PropertyChanged}"  Header="File name" Width="auto" />
+                    <GridViewColumn DisplayMemberBinding="{Binding Size, UpdateSourceTrigger=PropertyChanged}" Header="Size" Width="auto"/>
+                    <GridViewColumn Header="Progress" x:Name="pgbColumn">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
                                 <Grid>
-                                    <ProgressBar  x:Name="pbgDonwloadProgress" Width="{Binding ElementName=pgbColumn, Path=Width}" Value="{Binding Path=ProgressPercentage, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" Height="13" Minimum="0" Maximum="100" />
+                                    <ProgressBar x:Name="pbgDonwloadProgress" Width="{Binding ElementName=pgbColumn, Path=Width}" Value="{Binding Path=ProgressPercentage, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" Height="13" Minimum="0" Maximum="100" />
                                 </Grid>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn DisplayMemberBinding="{Binding Path=Status, UpdateSourceTrigger=PropertyChanged}"  Header="Status" Width="auto"/>
-                    <GridViewColumn DisplayMemberBinding="{Binding Path=Speed}" Header="Speed" Width="auto"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Status, UpdateSourceTrigger=PropertyChanged}"  Header="Status" Width="auto"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding}" Header="Speed" Width="auto"/>
                        
                 </GridView>
                 

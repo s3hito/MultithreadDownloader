@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,11 @@ namespace WFPUI.Commands
         private readonly Action<object> _execute;
         private readonly Predicate<object> _canExecute;
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove {  CommandManager.RequerySuggested -= value;}
+        }
 
         public RelayCommand(Action<object> execute, Predicate<object> canExecute=null)
         {
@@ -24,9 +29,10 @@ namespace WFPUI.Commands
         public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
 
         public void Execute(object parameter) => _execute(parameter);
-        protected void OnCanExecuteChanged()
+        
+        public void RaiseCanExecuteChanged()
         {
-            CanExecuteChanged?.Invoke(this, new EventArgs());
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 }

@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WFPUI.ViewModels;
 
 namespace WFPUI
 {
@@ -25,24 +26,16 @@ namespace WFPUI
     {
         DownloadController dnl;
         private List<DownloadThread> ThreadList;
-        public DownloadDetailsWindow()
+        public DownloadDetailsWindow(DownloadController controller)
         {
             InitializeComponent();
-            /*
-            FileManager FMan = new FileManager();
-            string link = "https://www.spiggle-theis.com/images/videos/BET_.mp4";
-            KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
-            dnl = new DownloadController(link, 10, FMan, Config, false);
-            AddDownload();
-            */
+            DownloadViewModel viewModel = new DownloadViewModel(controller);
+            this.DataContext = viewModel;
+
+            Closing += (s, e) => viewModel.Dispose();
         }
 
-        public void AddDownload()
-        {
 
-           
-
-        }
         private void lvThreadList_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             ListView _Listview = sender as ListView;
