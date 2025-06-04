@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using WFPUI.Commands;
+using WFPUI.Views;
 
 namespace WFPUI.ViewModels
 {
@@ -29,9 +30,7 @@ namespace WFPUI.ViewModels
                 downloadsManager.PropertyChanged += DownloadsManaager_PropertyChanged;
 
                 string link = "https://www.spiggle-theis.com/images/videos/BET_.mp4";
-                FileManager fileManager = new FileManager();
-                KeyValueConfigurationCollection config = fileManager.LoadConfiguration();
-                downloadsManager.AddDownloadFromLink(link, 1, fileManager, config);
+                //downloadsManager.AddDownloadFromLink(link, 1, new FileManager());
             }
 
 
@@ -66,6 +65,8 @@ namespace WFPUI.ViewModels
         public ICommand ToggleCommand => new RelayCommand(_ => ToggleDownload(), _ => SelectedController != null);
         public ICommand CancelCommand => new RelayCommand(_ => CancelDownload(), _ => SelectedController != null);
         public ICommand DoubleClickCommand => new RelayCommand(parameter => Item_DoubleClick(parameter));
+
+        public ICommand AddDownloadCommand => new RelayCommand(_ =>  AddDownload());
         private void ToggleDownload()
         {
 
@@ -75,17 +76,24 @@ namespace WFPUI.ViewModels
 
         private void CancelDownload()
         {
-
             downloadsManager.DeleteDownload(SelectedController);// Add functionality to check if the download is completed and in that case delete the completed file
-
-
         }
+
 
         public void Item_DoubleClick(object parameter)
         {
-            DownloadDetailsWindow detailsWin = new DownloadDetailsWindow((DownloadController)parameter);
+            DownloadDetailsWindow detailsWin = new DownloadDetailsWindow( downloadsManager,(DownloadController)parameter);
             detailsWin.Show();
         }
+
+        private void AddDownload()
+        {
+            AddDownloadWindow addWin = new AddDownloadWindow(downloadsManager);
+            addWin.Show();
+        }
+
+
+       
 
     }
 }

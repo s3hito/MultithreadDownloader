@@ -26,11 +26,13 @@ namespace MultithreadDownloader
             if (!Directory.Exists(SavedDownloadsFolder)) Directory.CreateDirectory(SavedDownloadsPath);
             if (useConsole) ManagerDrawer = new DownloadManagerDrawer(this);
             downloadControllers = new ObservableCollection<DownloadController>();
+            LoadSavedDownloads();
+            CreateDownloadsFromStates();
         }
 
-        public void AddDownloadFromLink(string link, int tnum, FileManager fman, KeyValueConfigurationCollection config)
+        public void AddDownloadFromLink(string link, int tnum, FileManager fman, ProxyConfiguration proxconfig)
         {
-            DownloadController controller = new DownloadController(link, tnum, fman, config);
+            DownloadController controller = new DownloadController(link, tnum, fman, proxconfig);
             AddDownloadController(controller);
         }
 
@@ -55,9 +57,8 @@ namespace MultithreadDownloader
         {
             FileManager FMan = new FileManager();
 
-            KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
 
-            DownloadController controller = new DownloadController(state, FMan , Config);
+            DownloadController controller = new DownloadController(state, FMan);
             AddDownloadController(controller);
 
         }

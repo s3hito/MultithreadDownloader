@@ -17,6 +17,8 @@ namespace MultithreadDownloader
         public long TotalSize { get; set; }
         public long ChucnkSize {  get; set; }
         public long TotalProgress { get; set; }
+        public DownloadStatuses DownloadStatus { get; set; }
+        public ProxyConfiguration ProxyConfiguration { get; set; }
     }
 
 }

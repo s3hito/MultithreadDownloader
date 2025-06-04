@@ -22,14 +22,12 @@ namespace MultithreadDownloader
 
             //DownloadController dnl = new DownloadController("testfile.mp4", link, 1, _useproxy: true, _proxyaddress: "117.250.3.58:8080");// with proxy
             FileManager FMan = new FileManager();
-            KeyValueConfigurationCollection Config = FMan.LoadConfiguration();
             DownloadsManager dMan=new DownloadsManager();
 
 
 
-            List<DownloadState> downloads = dMan.LoadSavedDownloads();
             DownloadManagerDrawer dmanDrawer = new DownloadManagerDrawer(dMan);
-            dMan.AddDownloadFromLink(link, 2, FMan, Config);
+            //dMan.AddDownloadFromLink(link, 2, FMan);
             await dmanDrawer.StartDrawer();
             
 

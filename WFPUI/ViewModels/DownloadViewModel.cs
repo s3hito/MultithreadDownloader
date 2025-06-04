@@ -11,6 +11,7 @@ using System.Resources;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using WFPUI.Commands;
 
@@ -19,7 +20,7 @@ namespace WFPUI.ViewModels
     public class DownloadViewModel : ObservableObject
     {
         private DownloadController _downloadController;
-        private DownloadsManager downloadsManager;
+        private DownloadsManager _downloadsManager;
 
         public DownloadViewModel()
         {
@@ -37,8 +38,9 @@ namespace WFPUI.ViewModels
 
         }
 
-        public DownloadViewModel(DownloadController controller)
+        public DownloadViewModel(DownloadsManager dlman,DownloadController controller)
         {
+            _downloadsManager = dlman;
             _downloadController = controller;
             _downloadController.PropertyChanged += DownloadController_PropertyChanged;
 
@@ -60,24 +62,20 @@ namespace WFPUI.ViewModels
 
 
         public ICommand PauseCommand => new RelayCommand(_ => PauseDownload());
-        public ICommand CancelCommand => new RelayCommand(_ => CancelDownload());
+        public ICommand CancelCommand => new RelayCommand(parameter => CancelDownload(parameter));
 
         private void PauseDownload()
         {
-
-
-
+            _downloadsManager.ToggleDownload(_downloadController);
         }
 
-        private void CancelDownload()
+        private void CancelDownload(object windowObj)
         {
-            _downloadController.Cancel();
+            _downloadsManager.DeleteDownload(_downloadController);
+            Window detailsWin = (Window)windowObj;
+            detailsWin.Close();
         }
-        private void StartDownload()
-        {
-            _downloadController.StartDownloadAsync();
 
-        }
 
         private void DownloadController_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {

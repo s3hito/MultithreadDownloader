@@ -28,7 +28,7 @@ namespace WFPUI
     /// net7.0
     public partial class MainWindow : Window
     {
-        AddWindow addwin = new AddWindow();
+        //AddDow addwin = new AddWindow();
         DownloadController dnl;
 
         public MainWindow()

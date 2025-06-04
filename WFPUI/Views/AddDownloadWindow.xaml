@@ -1,0 +1,61 @@
+﻿<Window x:Class="WFPUI.Views.AddDownloadWindow"
+        x:Name="AddDownload"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WFPUI.Views"
+        xmlns:viewmodels="clr-namespace:WFPUI.ViewModels"
+
+        mc:Ignorable="d"
+        Title="AddDownload" Height="150" Width="550">
+    <Window.DataContext>
+        <viewmodels:AddDownloadViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <!-- Upper grid-->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="5"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="auto"/>
+
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="0.2*"/>
+            <ColumnDefinition Width="20"/>
+
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Row="1" Grid.Column="1" Content="Address:" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
+        <TextBox Text="{Binding Url}" x:Name="UrlTextBox" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="1" VerticalAlignment="Center"  HorizontalAlignment="Stretch"/>
+        <Button Command="{Binding AddCommand}" CommandParameter="{Binding ElementName=AddDownload}" Grid.Row="1" Grid.Column="3" Content="Add" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="10,5,0,5" />
+        <Button Command="{Binding CancelCommand}" CommandParameter="{Binding ElementName=AddDownload}" Grid.Row="2" Grid.Column="3" Content="Cancel" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,5,0,5" />
+
+        <Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2">
+            <!-- lower grid-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="90"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" Content="Proxy:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+            <ComboBox x:Name="cmbProxyRule" ItemsSource="{Binding ProxyDistributionOptions}" SelectedItem="{Binding SelectedProxyOption}" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+            <Label Grid.Row="1" Grid.Column="0" Content="Out of proxy &#10; behaviour:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+            <ComboBox x:Name="cmbOutOfProxy" ItemsSource="{Binding OutOfProxyBehaviourOptions}" SelectedItem="{Binding SelectedOutOfProxyBehaviour}" IsEnabled="{Binding IsOutOfProxyEnabled}" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+            <Label Grid.Row="1" Grid.Column="3" Content="Threads:" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+            <TextBox x:Name="txtBoxThreads"  Grid.Row="1" Grid.Column="4" Text="{Binding ThreadNumber}" VerticalAlignment="Center" Width="40" Height="20"/>
+        </Grid>
+
+    </Grid>
+</Window>

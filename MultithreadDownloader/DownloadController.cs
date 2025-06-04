@@ -40,7 +40,8 @@ namespace MultithreadDownloader
         private bool DownloadFinished = false;
         public bool canClearLine=false;
         private long progressFromPaused;
-
+        private KeyValueConfigurationCollection config;
+        private ProxyConfiguration proxyConfiguration;
         public int TestVal=50;
 
 
@@ -78,48 +79,64 @@ namespace MultithreadDownloader
 
 
 
-        public DownloadController( string url, int _tnum, FileManager fileman, KeyValueConfigurationCollection config)
+        public DownloadController( string url, int _tnum, FileManager fileman, ProxyConfiguration proxconfig)
         {
    
             
             Status = DownloadStatuses.Idle;
-            
+            FMan = fileman;
+
+            //Load config
+
+            config = FMan.LoadConfiguration();
+
+
             _url = url;
             _tnumber = _tnum;
-            Path = config["Path"].Value;
+            proxyConfiguration = proxconfig;
             ProxyList=fileman.FetchProxyFile();
-            ProxyDistributor = new ProxyManager(config,ProxyList);
+            ProxyDistributor = new ProxyManager(proxyConfiguration, ProxyList);
+
+            Task.Run(SendInitialRequest);
 
 
+
+
+        }
+
+        public DownloadController(DownloadState downloadState, FileManager fileman)
+        {
+            FMan = fileman;
+            config = FMan.LoadConfiguration();
+            Path = config["Path"].Value;
+            ProxyList = FMan.FetchProxyFile();
+
+
+
+            CreateDownloadFromState(downloadState);
+            PathToTempFolder = Path + "\\" + _filename + ".temp";
+            FMan.SetValues(_filename, Path, _tnumber);
+
+
+        }
+
+        public async Task SendInitialRequest()
+        {
             request = (HttpWebRequest)WebRequest.Create(URL);
             responce = request.GetResponse();
             _byteslength = responce.ContentLength;
+            OnPropertyChanged("Size");
             SectionLength = _byteslength / _tnumber;
 
             TryGetName();
-            FMan = fileman;
-            FMan.SetValues(_filename, Path, _tnumber);
 
-            FMan.CreateDirectory();
-            PathToTempFolder = Path + "\\" + _filename + ".temp";
-
-
-        }
-
-        public DownloadController(DownloadState downloadState, FileManager fileman, KeyValueConfigurationCollection config)
-        {
             Path = config["Path"].Value;
-            FMan = fileman;
-            ProxyList = FMan.FetchProxyFile();
-
-            ProxyDistributor = new ProxyManager(config, ProxyList);
-
-            CreateDownloadFromState(downloadState);
+            PathToTempFolder = Path + "\\" + _filename + ".temp";
             FMan.SetValues(_filename, Path, _tnumber);
+            FMan.CreateDirectory();
+
 
         }
-
-
 
         public async Task StartDownloadAsync()
         {
@@ -147,7 +164,7 @@ namespace MultithreadDownloader
             Status = DownloadStatuses.Downloading;
             foreach (DownloadThread thread in ThreadList)
             {
-                tasks.Add(thread.StartThreadAsync());
+                if (thread.Status!=DownloadStatuses.Finished) tasks.Add(thread.StartThreadAsync());
             }
 
             await ServicesLauncher();
@@ -248,10 +265,14 @@ namespace MultithreadDownloader
 
         public void Continue()
         {
-            Status = DownloadStatuses.Downloading;
-            if (ThreadList.Count==0) SplitIntoSections(); //if threads are not already created, create them
-            canClearLine = true;
-            StartAllThreadsAsync();
+            if (Status != DownloadStatuses.Finished)
+            {
+                Status = DownloadStatuses.Downloading;
+                if (ThreadList.Count==0)SplitIntoSections(); //if threads are not already created, create them
+                canClearLine = true;
+                StartAllThreadsAsync();
+            }
+            
 
         }
 
@@ -276,6 +297,8 @@ namespace MultithreadDownloader
                 ThreadNumber = _tnumber,
                 ChucnkSize = _sectionlenth,
                 TotalProgress = _totalprogress,
+                ProxyConfiguration = proxyConfiguration,
+                DownloadStatus = this.Status,
                 ThreadStates = ThreadList.Select(t => new ThreadState
                 {
                     Start = t.Start,
@@ -329,7 +352,7 @@ namespace MultithreadDownloader
         {
             if (responce.Headers["Content-Disposition"] == null)
             {
-                _filename = URL.Split("/").Last();
+                Filename = URL.Split("/").Last();
             }
             else _filename = responce.Headers["Content-Disposition"].Replace("attachment; filename=", String.Empty).Replace("\"", String.Empty);
         }
@@ -345,6 +368,9 @@ namespace MultithreadDownloader
                 _tnumber = state.ThreadNumber;
                 _byteslength = state.TotalSize;
                 _sectionlenth = state.ChucnkSize;
+                proxyConfiguration = state.ProxyConfiguration;
+                Status=state.DownloadStatus;
+                ProxyDistributor = new ProxyManager(proxyConfiguration, ProxyList);
                 _threadlist = new ObservableCollection<DownloadThread>();
                 tasks = new List<Task>();
                 progressFromPaused = state.TotalProgress;

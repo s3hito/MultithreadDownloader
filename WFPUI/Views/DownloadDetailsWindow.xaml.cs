@@ -24,12 +24,11 @@ namespace WFPUI
     /// </summary>
     public partial class DownloadDetailsWindow : Window
     {
-        DownloadController dnl;
         private List<DownloadThread> ThreadList;
-        public DownloadDetailsWindow(DownloadController controller)
+        public DownloadDetailsWindow(DownloadsManager dlman, DownloadController controller)
         {
             InitializeComponent();
-            DownloadViewModel viewModel = new DownloadViewModel(controller);
+            DownloadViewModel viewModel = new DownloadViewModel(dlman, controller);
             this.DataContext = viewModel;
 
             Closing += (s, e) => viewModel.Dispose();

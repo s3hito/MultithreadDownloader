@@ -38,7 +38,7 @@
             Grid.Row="0" Grid.Column="0" Width="16" Height="16" HorizontalAlignment="Left"  Background="White" BorderBrush="White" Padding="0"
             Style="{StaticResource DefaultbtnOverride}"
             Content="{StaticResource AddImage}" 
-            Click="btnAdd_Click" MouseEnter="btnAdd_MouseEnter" MouseLeave="btnAdd_MouseLeave" />
+            Command="{Binding AddDownloadCommand}" MouseEnter="btnAdd_MouseEnter" MouseLeave="btnAdd_MouseLeave" />
 
             <Button x:Name="btnToggle" Grid.Row="1" Grid.Column="1" Content="continue" Command="{Binding ToggleCommand}"/>
             <Button x:Name="btnDelete" Grid.Row="1" Grid.Column="2" Content="Del" Command="{Binding CancelCommand}"/>

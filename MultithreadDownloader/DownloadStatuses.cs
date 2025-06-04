@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace MultithreadDownloader
 {
+    [JsonConverter(typeof(DownloadStatusesConverter))]
     public class DownloadStatuses
     {
         private DownloadStatuses(string status) { Status = status; }
@@ -34,5 +36,30 @@ namespace MultithreadDownloader
         public override string ToString() => Status;
 
         public static implicit operator string(DownloadStatuses status) => status.Status;
+    }
+    public class DownloadStatusesConverter : JsonConverter<DownloadStatuses>
+    {
+        public override void WriteJson(JsonWriter writer, DownloadStatuses value, JsonSerializer serializer)
+        {
+            writer.WriteValue(value?.Status);
+        }
+
+        public override DownloadStatuses ReadJson(JsonReader reader, Type objectType, DownloadStatuses existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            string statusValue = reader.Value?.ToString();
+
+            return statusValue switch
+            {
+                "Idle" => DownloadStatuses.Idle,
+                "Connecting" => DownloadStatuses.Connecting,
+                "Downloading" => DownloadStatuses.Downloading,
+                "Finished" => DownloadStatuses.Finished,
+                "Disconnected" => DownloadStatuses.Disconnected,
+                "Reconnecting" => DownloadStatuses.Reconnecting,
+                "Paused" => DownloadStatuses.Paused,
+                "Cancelled" => DownloadStatuses.Cancelled,
+                _ => DownloadStatuses.Idle // Default fallback
+            };
+        }
     }
 }

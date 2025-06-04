@@ -34,11 +34,12 @@ namespace MultithreadDownloader
         }
         private ProxyDistributionStates DistributorBehaviour;
         private OutOfProxyBehaviourStates OutOfProxyBehaviour;
-        public ProxyManager(KeyValueConfigurationCollection config, List<string> addresses = null)
+        public ProxyManager(ProxyConfiguration proxConfig, List<string> addresses = null)
         {
             Addresses=addresses;
-            DistributorBehaviour = (ProxyDistributionStates)Enum.Parse(typeof(ProxyDistributionStates), config["ProxyRule"].Value);
-            OutOfProxyBehaviour = (OutOfProxyBehaviourStates)Enum.Parse(typeof(OutOfProxyBehaviourStates), config["OutOfProxyRule"].Value);
+            DistributorBehaviour =proxConfig.DistributionPolicy;
+            OutOfProxyBehaviour= proxConfig.OutOfProxyBehaviour;
+            
         }
 
 
@@ -117,5 +118,37 @@ namespace MultithreadDownloader
         }
 
 
+    }
+
+    public class ProxyDistributionOption
+    {
+        public ProxyDistributionOption(string displayName, ProxyManager.ProxyDistributionStates value)
+        {
+            DisplayName = displayName;
+            Value = value;
+        }
+        public ProxyManager.ProxyDistributionStates Value { get; set; }
+        public string DisplayName { get; set; }
+
+        public override string ToString() => DisplayName;
+
+    }
+
+    public class OutOfProxyBehaviourOption
+    {
+        public OutOfProxyBehaviourOption(string displayName, ProxyManager.OutOfProxyBehaviourStates value)
+        {
+            DisplayName = displayName;
+            Value = value;
+        }
+        public ProxyManager.OutOfProxyBehaviourStates Value { get; set; }
+        public string DisplayName { get; set; }
+        public override string ToString() => DisplayName;
+    }
+
+    public class ProxyConfiguration
+    {
+        public ProxyManager.ProxyDistributionStates DistributionPolicy { get; set; }
+        public ProxyManager.OutOfProxyBehaviourStates OutOfProxyBehaviour { get; set; }
     }
 }

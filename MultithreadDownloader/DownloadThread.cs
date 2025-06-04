@@ -77,9 +77,8 @@ namespace MultithreadDownloader
             Path = path;
             PathToFile = Path + "\\" + Filename;
             ThreadName = Filename.Split(".").Last();
-            using (FileStream fs = new FileStream(PathToFile, FileMode.OpenOrCreate)) { } //Gotta add a feature so that if it's a new download
-                                                                                          //it creates a file (so that if there's a file from previous download)
-                                                                                          //and if it's a new thread for reconnection it opens a file
+            if ((start-end-1)!=0) using (FileStream fs = new FileStream(PathToFile, FileMode.OpenOrCreate)) { } //if download has not completed, open or create the file.
+                                                                                                                //if the download has completed, do nothing
         }
 
 
