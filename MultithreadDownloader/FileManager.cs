@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Collections.Specialized;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 
 
 namespace MultithreadDownloader
@@ -21,7 +22,6 @@ namespace MultithreadDownloader
         private string SavedDownloadsPath;
         private string SavedDownloadsFolder= "SavedDownloads";
         private int FileCount;
-        public Action RemoveDirectory;
         public Action CreateDirectory;
         
         public void SetValues(string fname, string path, int filecount)
@@ -34,7 +34,7 @@ namespace MultithreadDownloader
             PathtToMainFolder = path;
             FileCount = filecount;
 
-            RemoveDirectory = () => Directory.Delete(PathToTempFolder, true);
+
             CreateDirectory = () => Directory.CreateDirectory(PathToTempFolder);
         }
 
@@ -96,6 +96,15 @@ namespace MultithreadDownloader
             }
         }
 
+        public void RemoveTempDirectory()
+        {
+            Directory.Delete(PathToTempFolder, true);
+        }
+
+        public void RemoveDownloadedFile()
+        {
+            File.Delete(PathToMainFile);
+        }
 
 
         public void SaveDownloadStateToFile(DownloadState state)
@@ -120,6 +129,7 @@ namespace MultithreadDownloader
             KeyValueConfigurationCollection ConfCollection = ConfManager.AppSettings.Settings;
             return ConfCollection;
         }
+
 
     }
 }

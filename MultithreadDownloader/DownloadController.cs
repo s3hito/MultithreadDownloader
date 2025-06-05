@@ -94,7 +94,7 @@ namespace MultithreadDownloader
             _url = url;
             _tnumber = _tnum;
             proxyConfiguration = proxconfig;
-            ProxyList=fileman.FetchProxyFile();
+            ProxyList = fileman.FetchProxyFile(config["ProxyFileName"].Value);
             ProxyDistributor = new ProxyManager(proxyConfiguration, ProxyList);
 
             Task.Run(SendInitialRequest);
@@ -185,7 +185,7 @@ namespace MultithreadDownloader
                 CaptureDownloadState();
                 CloseAllThreads();
                 FMan.CombineTempFiles();
-                FMan.RemoveDirectory();
+                FMan.RemoveTempDirectory();
                 Status = DownloadStatuses.Finished;
             }
             canClearLine=true;
@@ -278,10 +278,18 @@ namespace MultithreadDownloader
 
         public void Cancel()
         {
-            Status = DownloadStatuses.Cancelled;
-            CloseAllThreads();
-            FMan.RemoveDirectory();
-            canClearLine= true;
+            if (Status == DownloadStatuses.Finished)
+            {
+                FMan.RemoveDownloadedFile();
+                CloseAllThreads();
+            }
+            else
+            {
+                Status = DownloadStatuses.Cancelled;
+                CloseAllThreads();
+                FMan.RemoveTempDirectory();
+            }
+            canClearLine = true;
             RemoveAllThreads();
 
         }

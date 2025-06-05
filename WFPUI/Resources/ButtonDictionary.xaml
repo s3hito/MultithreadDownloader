@@ -22,6 +22,36 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <Style x:Key="LowerOpacityButton" TargetType="Button">
+        <Setter Property="Opacity" Value="1.0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Name="border" 
+                            BorderThickness="0"
+                            BorderBrush="DarkGray" 
+                            CornerRadius="2" 
+                            Background="{TemplateBinding Background}">  
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="Gray"/>
+                        </Trigger>
+                        
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.25"/>
+            </Trigger>
+        </Style.Triggers>
+
+    </Style>
     <Style TargetType="{x:Type ListViewItem}" x:Key="itemstyle">
         <Setter Property="HorizontalContentAlignment" Value="Center" />
          <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick"/>

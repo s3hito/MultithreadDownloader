@@ -19,6 +19,8 @@ namespace WFPUI.ViewModels
         private DownloadController _selectedController;
         private ObservableCollection<DownloadController> _downloads;
 
+        AddDownloadWindow addWin;
+        DownloadDetailsWindow detailsWin;
         public MainWindowViewModel()
         {
             if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
@@ -65,6 +67,7 @@ namespace WFPUI.ViewModels
         public ICommand ToggleCommand => new RelayCommand(_ => ToggleDownload(), _ => SelectedController != null);
         public ICommand CancelCommand => new RelayCommand(_ => CancelDownload(), _ => SelectedController != null);
         public ICommand DoubleClickCommand => new RelayCommand(parameter => Item_DoubleClick(parameter));
+        public ICommand SettingsCommand => new RelayCommand(_ => OpenSettings());
 
         public ICommand AddDownloadCommand => new RelayCommand(_ =>  AddDownload());
         private void ToggleDownload()
@@ -82,16 +85,19 @@ namespace WFPUI.ViewModels
 
         public void Item_DoubleClick(object parameter)
         {
-            DownloadDetailsWindow detailsWin = new DownloadDetailsWindow( downloadsManager,(DownloadController)parameter);
+            detailsWin = new DownloadDetailsWindow( downloadsManager,(DownloadController)parameter);
             detailsWin.Show();
         }
 
         private void AddDownload()
         {
-            AddDownloadWindow addWin = new AddDownloadWindow(downloadsManager);
+            addWin = new AddDownloadWindow(downloadsManager);
             addWin.Show();
         }
+        private void OpenSettings()
+        {
 
+        }
 
        
 

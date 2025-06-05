@@ -15,6 +15,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="5"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -25,25 +26,29 @@
         </Grid.ColumnDefinitions>
         <Grid Grid.Row="0" Grid.Column="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="25"/>
-                <ColumnDefinition Width="25"/>
-                <ColumnDefinition Width="25"/>
-                <ColumnDefinition Width="25"/>
-                <ColumnDefinition Width="25"/>
-                <ColumnDefinition Width="25"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="35"/>
+                <ColumnDefinition Width="35"/>
+                <ColumnDefinition Width="35"/>
             </Grid.ColumnDefinitions>
-       
-        
-        <Button x:Name="btnAdd"  
-            Grid.Row="0" Grid.Column="0" Width="16" Height="16" HorizontalAlignment="Left"  Background="White" BorderBrush="White" Padding="0"
-            Style="{StaticResource DefaultbtnOverride}"
-            Content="{StaticResource AddImage}" 
-            Command="{Binding AddDownloadCommand}" MouseEnter="btnAdd_MouseEnter" MouseLeave="btnAdd_MouseLeave" />
 
-            <Button x:Name="btnToggle" Grid.Row="1" Grid.Column="1" Content="continue" Command="{Binding ToggleCommand}"/>
-            <Button x:Name="btnDelete" Grid.Row="1" Grid.Column="2" Content="Del" Command="{Binding CancelCommand}"/>
+
+            <Button x:Name="btnAdd"  
+            Grid.Row="0" Grid.Column="0"  Background="White" BorderBrush="White" Margin="2,0,2,0" Style="{StaticResource DefaultbtnOverride}"
+            Content="{StaticResource Plus}" Command="{Binding AddDownloadCommand}" MouseEnter="btnAdd_MouseEnter" MouseLeave="btnAdd_MouseLeave" />
+
+            <Button x:Name="btnToggle" Grid.Row="1" Grid.Column="1" Margin="2,0,2,0" Background="White" BorderBrush="White"
+                    Style="{StaticResource LowerOpacityButton}" Content="{StaticResource PlayPause}" Command="{Binding ToggleCommand}"/>
+            <Button x:Name="btnDelete" Grid.Row="1" Grid.Column="2" Margin="2,0,2,0"  Background="White" BorderBrush="White" 
+                    Style="{StaticResource LowerOpacityButton}" Content="{StaticResource Trash}" Command="{Binding CancelCommand}"/>
+            <Button x:Name="btnSettings" Grid.Row="1" Grid.Column="3" Margin="2,0,2,0"  Background="White" BorderBrush="White" 
+                    Style="{StaticResource LowerOpacityButton}"  Content="{StaticResource Config}" Command="{Binding SettingsCommand}"/>
+
         </Grid>
-        <ListView Grid.Row="1" Grid.Column="1" x:Name="lvDownloadInfo" SizeChanged="lvDownloadInfo_SizeChanged" Grid.ColumnSpan="4"
+        <ListView Grid.Row="2" Grid.Column="1" x:Name="lvDownloadInfo" SizeChanged="lvDownloadInfo_SizeChanged" Grid.ColumnSpan="4"
                   ItemContainerStyle="{StaticResource itemstyle}" ItemsSource="{Binding DownloadsList}" SelectedItem="{Binding SelectedController}">
             <bh:Interaction.Triggers>
                 <bh:EventTrigger EventName="MouseDoubleClick">

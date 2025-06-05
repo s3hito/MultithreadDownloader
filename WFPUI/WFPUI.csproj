@@ -8,7 +8,27 @@
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Resource Include="data\AddIcon.png" />
+    <None Remove="Images\cross.png" />
+    <None Remove="Images\play-pause.png" />
+    <None Remove="Images\plus.png" />
+    <None Remove="Images\settings.png" />
+    <None Remove="Images\trash.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\settings.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\AddIcon.png" />
+    <Resource Include="Images\cross.png" />
+    <Resource Include="Images\play-pause.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\plus.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\trash.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MultithreadDownloader\MultithreadDownloader.csproj" />

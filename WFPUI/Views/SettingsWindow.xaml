@@ -1,0 +1,122 @@
+﻿<Window x:Class="WFPUI.Views.SettingsWindow"
+        x:Name="Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WFPUI.Views"
+        mc:Ignorable="d"
+        xmlns:viewmodels="clr-namespace:WFPUI.ViewModels"
+
+        Title="SettingsWindow" Height="540" Width="430">
+    <Window.DataContext>
+        <viewmodels:SettingsViewModel/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="10"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Row="2" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Margin="5,0" Content="Ok" Width="80" Command="{Binding ConfirmCommand}" CommandParameter="{Binding ElementName=Settings}"/>
+            <Button Grid.Column="1" Margin="5,0" Content="Cancel" Width="80" Command="{Binding CancelCommnad}" CommandParameter="{Binding ElementName=Settings}"/>
+
+        </Grid>
+        <TabControl Grid.Row="1" Grid.Column="1">
+            <TabItem Header="Connections">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Maximum default connection number:"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ConnectionNumer, Mode=TwoWay}"/>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Folders">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Path to save downloaded files"/>
+                    <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="1" Margin="0,0,20,0"
+                             Text="{Binding PathToDownloadedFiles, Mode=TwoWay}"/>
+                    <Button Grid.Column="1" Grid.Row="1" Width="60" Content="Browse" />
+                    <Label Grid.Row="3" Grid.Column="0" Content="Path to save temporary files"/>
+                    <TextBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="1" Margin="0,0,20,0"
+                             Text="{Binding PathToTempFiles, Mode=TwoWay}"/>
+                    <Button Grid.Column="1" Grid.Row="4" Width="60" Content="Browse" />
+
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Proxy">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Column="0" Grid.Row="0">
+                        <Label Content="Proxy distribution policy"/>
+                        <RadioButton Content="No proxy" Margin="5,5,5,10" IsChecked="True"/>
+                        <RadioButton Content="Use single proxy" Margin="5,5,5,10"/>
+                        <RadioButton Content="Single Proxy with Switching" Margin="5,5,5,10"/>
+                        <RadioButton Content="Multiple Proxies" Margin="5,5,5,10"/>
+                        <RadioButton Content="Multiple Proxies (Cycle)" Margin="5,5,5,10"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1"  Grid.Row="0" >
+                        <Label Content="Out of proxy behaviour"/>
+                        <RadioButton Content="Don't Use Proxy" Margin="5,5,5,10" IsChecked="True"/>
+                        <RadioButton Content="Use Last Used Proxy" Margin="5,5,5,10"/>
+                        <RadioButton Content="Start Over" Margin="5,5,5,10"/>
+                    </StackPanel>
+
+                    <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="Proxy list:" HorizontalContentAlignment="Center"/>
+
+                    <ScrollViewer Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                        <TextBox AcceptsReturn="True" Text="{Binding ProxyText}"/>
+                    </ScrollViewer>
+                </Grid>
+                
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</Window>

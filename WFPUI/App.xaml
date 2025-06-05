@@ -2,14 +2,19 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:WFPUI"
-             StartupUri="Views/MainWindow.xaml">
+             StartupUri="Views/MainWindow.xaml"
+            >
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/ButtonDictionary.xaml"/>
                 <ResourceDictionary Source="Resources/DownloadDetailsRD.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <Image x:Key="AddImage" Source="/data/AddIcon.png" Margin="0"/>
+            <Image x:Key="Plus" Source="/Images/plus.png" Width="25" Height="25"/>
+            <Image x:Key="PlayPause" Source="/Images/play-pause.png" Width="25" Height="25"/>
+            <Image x:Key="Trash" Source="/Images/trash.png" Width="25" Height="25"/>
+            <Image x:Key="Config" Source="/Images/settings.png" Width="25" Height="25"/>
+
 
         </ResourceDictionary>
     </Application.Resources>
