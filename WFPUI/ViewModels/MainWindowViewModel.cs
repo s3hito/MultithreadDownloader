@@ -21,6 +21,7 @@ namespace WFPUI.ViewModels
 
         AddDownloadWindow addWin;
         DownloadDetailsWindow detailsWin;
+        SettingsWindow settingsWin;
         public MainWindowViewModel()
         {
             if (!System.ComponentModel.DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
@@ -96,7 +97,8 @@ namespace WFPUI.ViewModels
         }
         private void OpenSettings()
         {
-
+            settingsWin = new SettingsWindow();
+            settingsWin.Show();
         }
 
        

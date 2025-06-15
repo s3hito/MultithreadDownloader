@@ -154,7 +154,7 @@ namespace MultithreadDownloader
             LastPiece = BytesLength % _tnumber;
             for (int i = 0; i < _tnumber; i++)
             {
-                ThreadList.Add(new DownloadThread(URL, i * _sectionlenth, ((i + 1) * _sectionlenth) - 1, $"{_filename}.temp{i}", PathToTempFolder, ProxyDistributor));
+                ThreadList.Add(new DownloadThread(URL, i * _sectionlenth, ((i + 1) * _sectionlenth) - 1, $"{_filename}.temp{i}", PathToTempFolder, ProxyDistributor, seqnum:i));
             }
             ThreadList[_tnumber - 1].End = ThreadList[_tnumber - 1].End + LastPiece ; //Maybe add "+1" here
 

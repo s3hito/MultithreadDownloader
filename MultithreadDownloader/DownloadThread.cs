@@ -45,7 +45,7 @@ namespace MultithreadDownloader
         public DownloadStatuses Status { get { return _status; } set { _status = value; OnPropertyChanged(); } }
 
        
-        public DownloadThread(string url, long start, long end, string filename,string path, ProxyManager proxman,string prox="", long acum=0, int reccount=-1, int maxrec=3)
+        public DownloadThread(string url, long start, long end, string filename,string path, ProxyManager proxman,string prox="", long acum=0, int reccount=-1, int maxrec=3, int seqnum=0)
         {
 
             URL = url;
@@ -58,6 +58,7 @@ namespace MultithreadDownloader
             Accumulated = acum;
             ReconnectCount= reccount;
             MaxReconnect = maxrec;
+            _seqnumber = seqnum;
             ThreadRequest = (HttpWebRequest)WebRequest.Create(URL);
             ProxyDistRef = proxman;
             Proxy = prox;

@@ -72,7 +72,6 @@
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
                     <GridViewColumn DisplayMemberBinding="{Binding Status, UpdateSourceTrigger=PropertyChanged}"  Header="Status" Width="auto"/>
-                    <GridViewColumn DisplayMemberBinding="{Binding}" Header="Speed" Width="auto"/>
                        
                 </GridView>
                 

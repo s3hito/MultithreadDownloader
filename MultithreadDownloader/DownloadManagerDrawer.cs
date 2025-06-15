@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace MultithreadDownloader
 {
@@ -18,6 +19,7 @@ namespace MultithreadDownloader
 
         private ConsoleKeyInfo key;
 
+        private int threadnumber;
         int i;
         private int delayms;
         private int menuIndex;
@@ -27,11 +29,13 @@ namespace MultithreadDownloader
         private bool clearFlag=false;
         private bool isInDetailsMenu=false;
         private bool deleteFlag = false;
+        private bool pauseFlag = false;
 
+        private string link;
         private string prefixstring;
         private string progressBar;
 
-        public DownloadManagerDrawer(DownloadsManager dlman, int delayms=100)
+        public DownloadManagerDrawer(DownloadsManager dlman, int delayms=20)
         {
             dlManRef = dlman;
             this.delayms = delayms;
@@ -46,6 +50,7 @@ namespace MultithreadDownloader
             Task.Run(CheckInput);
             while (!exitFlag)
             {
+                if (pauseFlag) { await Task.Delay(delayms); continue; }
                 UpdateConsole();
                 await Task.Delay(delayms);
             }
@@ -97,6 +102,18 @@ namespace MultithreadDownloader
             }
         }
 
+        private void AddDownloadGenerator()
+        {
+            Console.Clear();
+            Console.WriteLine("Enter a link: ");
+            link = Console.ReadLine();
+            Console.Clear();
+            Console.WriteLine("Enter thread number: ");
+            threadnumber= Convert.ToInt32(Console.ReadLine());
+            dlManRef.AddDownloadFromLink(link, threadnumber, new FileManager(), new ProxyConfiguration { DistributionPolicy = ProxyManager.ProxyDistributionStates.MultipleCycle, OutOfProxyBehaviour = ProxyManager.OutOfProxyBehaviourStates.StartOver });
+            pauseFlag = false;
+        }
+
 
 
 
@@ -109,7 +126,7 @@ namespace MultithreadDownloader
                        $"Chunk size: {controller.SectionLength} \n" +
                        $"Number of threads: {controller.ThreadNumber}";
             }
-            else prefixstring = $"Use UP/DN to move, ENTER to select, ESC - exit, P - toggle pause, X - delete\n" +
+            else prefixstring = $"Use UP/DN to move, ENTER to select, ESC - exit, P - toggle pause, X - delete, A - add\n" +
                     $"Total downloads: {dlManRef.downloadControllers.Count}";
         }
 
@@ -128,7 +145,7 @@ namespace MultithreadDownloader
                 {
                 
                     key = Console.ReadKey();
-                    if (dlManRef.downloadControllers.Count == 0) continue;
+                    if (dlManRef.downloadControllers.Count == 0 && key.Key!=ConsoleKey.A) continue;
                     switch (key.Key)
                     {
                         case ConsoleKey.UpArrow:
@@ -165,6 +182,10 @@ namespace MultithreadDownloader
                             deleteFlag = true;
                             break;
 
+                        case ConsoleKey.A:
+                            pauseFlag = true;
+                            AddDownloadGenerator();
+                            break;
 
                     }
                    
